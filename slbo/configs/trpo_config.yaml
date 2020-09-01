@@ -1,0 +1,31 @@
+mf_algo: 'trpo'
+proj_dir: '/home/polixir/jiangsy/slbo'
+result_dir: './result'
+use_cuda: False
+seed: 0
+verbose: 0
+model_load_path: ~
+buffer_load_path: ~
+save_interval: 10
+log_interval: 1
+eval_interval: 10
+
+env:
+  env_name: 'Hopper-v2'
+  num_envs: 1
+  gamma: 0.99
+
+ou_noise:
+  theta: 0.15
+  sigma: 0.3
+
+trpo:
+  total_env_steps: 2000000
+  entropy_coef: 0.
+  max_kld: 0.01
+  num_env_steps: 2048
+  critic_hidden_dims: [64, 64]
+  actor_hidden_dims: [64, 64]
+  use_gae: True
+  gae_lambda: 0.95
+  use_proper_time_limits: True

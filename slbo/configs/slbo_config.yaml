@@ -1,0 +1,48 @@
+mf_algo: 'trpo'
+proj_dir: '/home/polixir/jiangsy/slbo'
+result_dir: './result'
+use_cuda: False
+seed: 0
+verbose: 0
+model_load_path: ~
+buffer_load_path: ~
+save_freq: 2
+eval_freq: 1
+
+env:
+  env_name: 'RLLabHopper-v2'
+  num_envs: 1
+  gamma: 0.99
+
+ou_noise:
+  theta: 0.15
+  sigma: 0.3
+
+trpo:
+  entropy_coef: 0.005
+  max_kld: 0.01
+  num_env_steps: 4000
+  critic_hidden_dims: [32, 32]
+  actor_hidden_dims: [32, 32]
+  use_gae: True
+  gae_lambda: 0.95
+  use_proper_time_limits: True
+  log_interval: 2
+
+slbo:
+  num_env_steps: 4000
+  num_epochs: 100 # collect num_env_steps per epoch
+  num_iters: 20 # number of iteration per epoch
+  num_model_updates: 100 # number of model updates per iteration
+  num_policy_updates: 40 # number of model updates per iteration
+  use_prev_data: True
+  dynamics_hidden_dims: [500, 500]
+  num_planning_envs: 1
+  num_rollout_steps: 2
+  batch_size: 128
+  buffer_size: 200000
+  lr: 0.001
+  l2_reg_coef: 0.00001
+  outer_log_interval: 1
+  inner_log_interval: 5 # trpo output interval
+  start_strategy: 'buffer' # choose from 'reset' and 'buffer'
