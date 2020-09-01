@@ -11,6 +11,6 @@ Please refer to ./requirements.txt.
     
   hyperparams in ./configs/slbo_config.yaml
 
-## Credits
+# Credits
 1. [kostrikov/pytorch-trpo](https://github.com/ikostrikov/pytorch-trpo)
 2. [facebookresearch/slbo](https://github.com/facebookresearch/slbo)
