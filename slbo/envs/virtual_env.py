@@ -16,20 +16,24 @@ class VirtualEnv(gym.Env):
         self.action_dim = self.action_space.shape[0]
 
         self.dynamics = dynamics
+        self.device = next(self.dynamics.parameters()).device
         self.env = env
         self.env.seed(seed)
 
         self.state = np.zeros([self.observation_space.shape[0]], dtype=np.float32)
 
-    def step(self, action: np.ndarray):
-        device = next(self.dynamics.parameters()).device
+    def _rescale_action(self, action):
+        lo, hi = self.action_space.low, self.action_space.high
+        return lo + (action + 1.) * 0.5 * (hi - lo)
 
+    def step(self, action: np.ndarray):
         states = self.state.reshape([1, self.state_dim])
         actions = action.reshape([1, self.action_dim])
+        rescaled_actions = self._rescale_action(action).reshape([1, self.action_dim])
         with torch.no_grad():
-            next_states = self.dynamics(torch.tensor(states, device=device, dtype=torch.float32),
-                                        torch.tensor(actions, device=device, dtype=torch.float32)).cpu().numpy()
-            reward, done = self.env.mb_step(states, actions, next_states)
+            next_states = self.dynamics(torch.tensor(states, device=self.device, dtype=torch.float32),
+                                        torch.tensor(actions, device=self.device, dtype=torch.float32)).cpu().numpy()
+            reward, done = self.env.mb_step(states, rescaled_actions, next_states)
             reward, done = reward[0], done[0]
         self.state = next_states[0]
         return self.state.copy(), reward.copy(), done.copy(), {}

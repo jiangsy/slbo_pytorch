@@ -8,7 +8,7 @@ from slbo.models.normalizer import Normalizer
 
 class SLBO:
     def __init__(self, dynamics: Dynamics, normalizers: Normalizer, batch_size: int, num_updates: int,
-                 num_rollout_steps=4, l2_reg_coef=0.01, max_grad_norm=10, lr=3e-4):
+                 num_rollout_steps, l2_reg_coef, lr, max_grad_norm=2):
         self.dynamics = dynamics
         self.normalizers = normalizers
 

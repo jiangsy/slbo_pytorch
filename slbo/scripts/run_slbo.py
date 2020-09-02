@@ -135,10 +135,7 @@ def main():
         for step in range(config.slbo.num_env_steps):
             # noinspection PyUnboundLocalVariable
             unscaled_actions = noise_wrapped_actor.act(states)[0]
-            if real_envs.get_attr('rescale_action', indices=0):
-                actions = (lo + (unscaled_actions + 1.) * 0.5 * (hi - lo))
-            else:
-                actions = unscaled_actions
+            actions = (lo + (unscaled_actions + 1.) * 0.5 * (hi - lo))
 
             next_states, rewards, dones, infos = real_envs.step(actions)
             masks = torch.tensor([[0.0] if done else [1.0] for done in dones])
@@ -191,25 +188,22 @@ def main():
                     virt_envs.reset()  # set the need_reset flag to False
                     initial_states = next(model_buffer.get_batch_generator(config.slbo.num_planning_envs))['states']
                     for env_idx in range(config.slbo.num_planning_envs):
+                        # FIXME: check set_state
                         virt_envs.env_method('set_state', initial_states[env_idx].cpu().numpy(), indices=env_idx)
                 elif config.slbo.start_strategy == 'reset':
                     initial_states = virt_envs.reset()
                 policy_buffer.states[0].copy_(initial_states)
                 for step in range(config.trpo.num_env_steps):
                     with torch.no_grad():
-                        unscaled_actions, action_log_probs, dist_entropy, *_ = actor.act(policy_buffer.states[step])
+                        actions, action_log_probs, dist_entropy, *_ = actor.act(policy_buffer.states[step])
                         values = critic(policy_buffer.states[step])
 
-                    if real_envs.get_attr('rescale_action', indices=0):
-                        actions = (lo + (unscaled_actions + 1.) * 0.5 * (hi - lo))
-                    else:
-                        actions = unscaled_actions
                     states, rewards, dones, infos = virt_envs.step(actions)
 
                     mask = torch.tensor([[0.0] if done else [1.0] for done in dones], dtype=torch.float32)
                     bad_mask = torch.tensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos],
                                             dtype=torch.float32)
-                    policy_buffer.insert(states=states, actions=unscaled_actions, action_log_probs=action_log_probs,
+                    policy_buffer.insert(states=states, actions=actions, action_log_probs=action_log_probs,
                                          values=values, rewards=rewards, masks=mask, bad_masks=bad_mask)
 
                     episode_rewards_virtual.extend([info['episode']['r'] for info in infos if 'episode' in info.keys()])
