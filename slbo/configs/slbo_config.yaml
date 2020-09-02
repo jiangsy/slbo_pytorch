@@ -1,5 +1,5 @@
 mf_algo: 'trpo'
-proj_dir: '/home/polixir/jiangsy/slbo'
+proj_dir: ~
 result_dir: './result'
 use_cuda: False
 seed: 0
@@ -10,7 +10,7 @@ save_freq: 2
 eval_freq: 1
 
 env:
-  env_name: 'RLLabHopper-v2'
+  env_name: 'Hopper-v2'
   num_envs: 1
   gamma: 0.99
 
