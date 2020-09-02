@@ -173,9 +173,10 @@ def main():
             # noinspection PyUnboundLocalVariable
             agent.entropy_coef = 0.
 
-        normalizers.state_normalizer.update(cur_model_buffer.states)
+        normalizers.state_normalizer.update(cur_model_buffer.states.reshape([-1, state_dim]))
         # normalizers.action_normalizer.update(cur_model_buffer.actions)
-        normalizers.diff_normalizer.update(cur_model_buffer.next_states - cur_model_buffer.states)
+        normalizers.diff_normalizer.update((cur_model_buffer.next_states - cur_model_buffer.states).
+                                           reshape([-1, state_dim]))
 
         for i in range(config.slbo.num_iters):
             logger.log('Updating the model  - iter {:02d}'.format(i))

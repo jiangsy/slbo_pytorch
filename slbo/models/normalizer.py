@@ -36,8 +36,8 @@ class GaussianNormalizer(nn.Module):
         new_n = old_n + n
         new_mean = old_mean + delta * n / new_n
         new_std = torch.sqrt((old_std**2 * old_n + samples.var(dim=0) * n + delta**2 * old_n * n / new_n) / new_n)
-        kl_old_new = kl.kl_divergence(torch.distributions.Normal(new_mean, new_std),
-                                      torch.distributions.Normal(old_mean, old_std)).sum()
+        kl_old_new = kl.kl_divergence(torch.distributions.Normal(new_mean, torch.clamp(new_std, 1e-20)),
+                                      torch.distributions.Normal(old_mean, torch.clamp(old_std, 1e-20))).sum()
         self.mean, self.std, self.n = new_mean, new_std, new_n
 
         if self.verbose > 0:
