@@ -24,17 +24,19 @@ trpo:
   num_env_steps: 4000
   critic_hidden_dims: [32, 32]
   actor_hidden_dims: [32, 32]
+  use_limited_ent_actor: True
   use_gae: True
   gae_lambda: 0.95
   use_proper_time_limits: True
   log_interval: 5
+  norm_reward: True
 
 slbo:
   num_env_steps: 4000
   num_epochs: 100 # collect num_env_steps per epoch
-  num_iters: 20 # number of iteration per epoch
+  num_iters: 10 # number of iteration per epoch
   num_model_updates: 100 # number of model updates per iteration
-  num_policy_updates: 40 # number of model updates per iteration
+  num_policy_updates: 20 # number of model updates per iteration
   use_prev_data: True
   dynamics_hidden_dims: [500, 500]
   num_planning_envs: 1

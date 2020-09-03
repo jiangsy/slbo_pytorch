@@ -24,7 +24,7 @@ except ImportError:
 # noinspection DuplicatedCode
 def main():
     logger.info('Test script for TRPO')
-    config = Config('trpo_config.yaml')
+    config, hparam_dict = Config('trpo_config.yaml')
 
     torch.manual_seed(config.seed)
     # noinspection PyUnresolvedReferences
@@ -43,6 +43,7 @@ def main():
     os.makedirs(eval_log_dir, exist_ok=True)
     os.makedirs(save_dir, exist_ok=True)
     writer = SummaryWriter(log_dir=log_dir)
+    writer.add_hparams(hparam_dict, {})
 
     # save current version of code
     shutil.copytree(config.proj_dir, save_dir + '/code', ignore=shutil.ignore_patterns('result', 'data', 'ref'))
