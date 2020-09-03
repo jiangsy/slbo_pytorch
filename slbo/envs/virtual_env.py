@@ -33,8 +33,8 @@ class VirtualEnv(gym.Env):
         with torch.no_grad():
             next_states = self.dynamics(torch.tensor(states, device=self.device, dtype=torch.float32),
                                         torch.tensor(actions, device=self.device, dtype=torch.float32)).cpu().numpy()
-            reward, done = self.env.mb_step(states, rescaled_actions, next_states)
-            reward, done = reward[0], done[0]
+            rewards, dones = self.env.mb_step(states, rescaled_actions, next_states)
+            reward, done = rewards[0], dones[0]
         self.state = next_states[0]
         return self.state.copy(), reward.copy(), done.copy(), {}
 

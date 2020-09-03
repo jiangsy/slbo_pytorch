@@ -1,5 +1,5 @@
 mf_algo: 'trpo'
-proj_dir: ~
+proj_dir: '/home/polixir/jiangsy/slbo'
 result_dir: './result'
 use_cuda: False
 seed: 0
@@ -27,7 +27,7 @@ trpo:
   use_gae: True
   gae_lambda: 0.95
   use_proper_time_limits: True
-  log_interval: 2
+  log_interval: 5
 
 slbo:
   num_env_steps: 4000
@@ -43,6 +43,5 @@ slbo:
   buffer_size: 200000
   lr: 0.001
   l2_reg_coef: 0.00001
-  outer_log_interval: 1
-  inner_log_interval: 5 # trpo output interval
+  log_interval: 1
   start_strategy: 'buffer' # choose from 'reset' and 'buffer'

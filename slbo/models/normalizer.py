@@ -1,13 +1,15 @@
-from typing import List
-
 import torch
 import torch.distributions.kl as kl
 import torch.nn as nn
-from stable_baselines import logger
+from typing import List
+try:
+    from slbo.misc import logger
+except ImportError:
+    from stable_baselines import logger
 
 
 class GaussianNormalizer(nn.Module):
-    def __init__(self, shape: List[int], eps=1e-8, verbose=0):  # batch_size x ...
+    def __init__(self, shape: List[int], eps=1e-8, verbose=0):
         super().__init__()
 
         self.shape = shape
@@ -28,6 +30,7 @@ class GaussianNormalizer(nn.Module):
         self.std = self.std.to(*args, **kwargs)
 
     # noinspection DuplicatedCode
+    # samples in [batch_size, ...]
     def update(self, samples: torch.Tensor):
         old_mean, old_std, old_n = self.mean, self.std, self.n
         samples = samples - old_mean
@@ -41,7 +44,7 @@ class GaussianNormalizer(nn.Module):
         self.mean, self.std, self.n = new_mean, new_std, new_n
 
         if self.verbose > 0:
-            logger.info("updating Normalizer<%s>, KL divergence = %.6f", self.name, kl_old_new)
+            logger.debug("updating Normalizer<%s>, KL divergence = %.6f", self.name, kl_old_new)
 
     # noinspection PyMethodOverriding
     def state_dict(self, *args, **kwargs):

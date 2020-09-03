@@ -121,7 +121,6 @@ def main():
     start = time.time()
 
     for epoch in range(config.slbo.num_epochs):
-
         logger.info('Epoch {}:'.format(epoch))
 
         if not config.slbo.use_prev_data:
@@ -135,7 +134,7 @@ def main():
         for step in range(config.slbo.num_env_steps):
             # noinspection PyUnboundLocalVariable
             unscaled_actions = noise_wrapped_actor.act(states)[0]
-            actions = (lo + (unscaled_actions + 1.) * 0.5 * (hi - lo))
+            actions = lo + (unscaled_actions + 1.) * 0.5 * (hi - lo)
 
             next_states, rewards, dones, infos = real_envs.step(actions)
             masks = torch.tensor([[0.0] if done else [1.0] for done in dones])
@@ -154,7 +153,7 @@ def main():
 
         model_buffer.add_buffer(cur_model_buffer)
 
-        if (epoch + 1) % config.slbo.outer_log_interval == 0 and len(episode_rewards_real) > 0:
+        if (epoch + 1) % config.slbo.log_interval == 0 and len(episode_rewards_real) > 0:
             log_info = [('serial_timesteps', serial_env_steps), ('total_timesteps', total_env_steps),
                         ('perf/ep_rew_real', np.mean(episode_rewards_real)),
                         ('perf/ep_len_real', np.mean(episode_lengths_real)),
@@ -175,6 +174,7 @@ def main():
 
         normalizers.state_normalizer.update(cur_model_buffer.states.reshape([-1, state_dim]))
         # normalizers.action_normalizer.update(cur_model_buffer.actions)
+        # FIXME: rule out incorrect value
         normalizers.diff_normalizer.update((cur_model_buffer.next_states - cur_model_buffer.states).
                                            reshape([-1, state_dim]))
 
@@ -215,7 +215,7 @@ def main():
                 policy_buffer.compute_returns(next_value)
                 losses.update(agent.update(policy_buffer))
 
-            if (i + 1) % config.slbo.inner_log_interval == 0 and len(episode_rewards_virtual) > 0:
+            if (i + 1) % config.trpo.log_interval == 0 and len(episode_rewards_virtual) > 0:
                 log_info = [('perf/ep_rew_virtual', np.mean(episode_rewards_virtual)),
                             ('perf/ep_len_virtual', np.mean(episode_lengths_virtual)),
                             ]
