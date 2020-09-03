@@ -5,8 +5,8 @@ from collections import deque
 from operator import itemgetter
 
 import numpy as np
-import torch.utils.backcompat
 import tqdm
+import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from slbo.algos import SLBO, PPO, TRPO
@@ -26,7 +26,7 @@ except ImportError:
 
 # noinspection DuplicatedCode
 def main():
-    config = Config('slbo_config.yaml')
+    config, hparam_dict = Config('slbo_config.yaml')
     assert config.mf_algo == 'trpo'
 
     import datetime
@@ -38,6 +38,7 @@ def main():
     os.makedirs(eval_log_dir, exist_ok=True)
     os.makedirs(save_dir, exist_ok=True)
     writer = SummaryWriter(log_dir=log_dir)
+    writer.add_hparams(hparam_dict, metric_dict={})
     # save current version of code
     shutil.copytree(config.proj_dir, save_dir + '/code', ignore=shutil.ignore_patterns('result', 'data', 'ref'))
 
@@ -59,13 +60,15 @@ def main():
     dynamics = Dynamics(state_dim, action_dim, config.slbo.dynamics_hidden_dims, normalizer=normalizers)
     dynamics.to(device)
 
-    noise = OUNoise(real_envs.action_space, config.ou_noise.theta, sigma=config.ou_noise.sigma)
+    noise = OUNoise(real_envs.action_space, config.ou_noise.theta, config.ou_noise.sigma)
 
     virt_envs = make_vec_vritual_envs(config.env.env_name, dynamics, config.seed, config.slbo.num_planning_envs,
                                       None, device, True)
 
     if config.mf_algo == 'ppo':
-        actor_critic = ActorCritic(state_dim, action_space, actor_hidden_dims=[64, 64], critic_hidden_dims=[64, 64])
+        actor_critic = ActorCritic(state_dim, action_space,
+                                   actor_hidden_dims=config.ppo.actor_hidden_dims,
+                                   critic_hidden_dims=config.ppo.critic_hidden_dims)
         actor_critic.to(device)
 
         agent = PPO(actor_critic, config.ppo_clip_param, config.ppo_num_grad_epochs, config.ppo_batch_size,
@@ -78,7 +81,6 @@ def main():
     elif config.mf_algo == 'trpo':
         actor = Actor(state_dim, action_space, hidden_dims=config.trpo.actor_hidden_dims,
                       state_normalizer=normalizers.state_normalizer)
-        # actor = MLPActor(state_dim, action_dim, config.trpo.actor_hidden_dims)
         critic = VCritic(state_dim, hidden_dims=config.trpo.critic_hidden_dims,
                          state_normalizer=normalizers.state_normalizer)
         actor.to(device)
@@ -101,6 +103,7 @@ def main():
     model_buffer.to(device)
 
     if config.model_load_path is not None:
+        raise NotImplemented
         actor_state_dict, critic_state_dict,  dynamics_state_dict, normalizers_state_dict \
             = itemgetter(*['actor', 'critic', 'dynamics', 'normalizers'])(torch.load(config.model_load_path))
         # noinspection PyUnboundLocalVariable
@@ -111,6 +114,7 @@ def main():
         normalizers.load_state_dict(normalizers_state_dict)
 
     if config.buffer_load_path is not None:
+        raise NotImplemented
         model_buffer.load(config.buffer_load_path)
 
     episode_rewards_real = deque(maxlen=10)
@@ -121,7 +125,7 @@ def main():
     start = time.time()
 
     for epoch in range(config.slbo.num_epochs):
-        logger.info('Epoch {}:'.format(epoch))
+        logger.info('Epoch {}:'.format(epoch + 1))
 
         if not config.slbo.use_prev_data:
             model_buffer.clear()
@@ -134,6 +138,7 @@ def main():
         for step in range(config.slbo.num_env_steps):
             # noinspection PyUnboundLocalVariable
             unscaled_actions = noise_wrapped_actor.act(states)[0]
+            # for mujoco envs, actions is equal to unscaled_actions
             actions = lo + (unscaled_actions + 1.) * 0.5 * (hi - lo)
 
             next_states, rewards, dones, infos = real_envs.step(actions)
@@ -157,8 +162,7 @@ def main():
             log_info = [('serial_timesteps', serial_env_steps), ('total_timesteps', total_env_steps),
                         ('perf/ep_rew_real', np.mean(episode_rewards_real)),
                         ('perf/ep_len_real', np.mean(episode_lengths_real)),
-                        ('time_elapsed', time.time() - start)
-                        ]
+                        ('time_elapsed', time.time() - start)]
             log_and_write(logger, writer, log_info, global_step=epoch * config.slbo.num_iters)
 
         if epoch == 0:
@@ -174,15 +178,15 @@ def main():
 
         normalizers.state_normalizer.update(cur_model_buffer.states.reshape([-1, state_dim]))
         # normalizers.action_normalizer.update(cur_model_buffer.actions)
-        # FIXME: rule out incorrect value
+        # FIXME: rule out incorrect tuples
         normalizers.diff_normalizer.update((cur_model_buffer.next_states - cur_model_buffer.states).
                                            reshape([-1, state_dim]))
 
         for i in range(config.slbo.num_iters):
-            logger.log('Updating the model  - iter {:02d}'.format(i))
+            logger.log('Updating the model  - iter {:02d}'.format(i + 1))
             losses = model.update(model_buffer)
 
-            logger.log('Updating the policy - iter {:02d}'.format(i))
+            logger.log('Updating the policy - iter {:02d}'.format(i + 1))
             for _ in tqdm.tqdm(range(config.slbo.num_policy_updates)):
                 # collect data in the virtual env
                 if config.slbo.start_strategy == 'buffer':
@@ -196,15 +200,16 @@ def main():
                 policy_buffer.states[0].copy_(initial_states)
                 for step in range(config.trpo.num_env_steps):
                     with torch.no_grad():
-                        actions, action_log_probs, dist_entropy, *_ = actor.act(policy_buffer.states[step])
+                        unscaled_actions, action_log_probs, dist_entropy, *_ = actor.act(policy_buffer.states[step])
                         values = critic(policy_buffer.states[step])
 
-                    states, rewards, dones, infos = virt_envs.step(actions)
+                    # virtual_envs deal with action rescaling internally
+                    states, rewards, dones, infos = virt_envs.step(unscaled_actions)
 
                     mask = torch.tensor([[0.0] if done else [1.0] for done in dones], dtype=torch.float32)
                     bad_mask = torch.tensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos],
                                             dtype=torch.float32)
-                    policy_buffer.insert(states=states, actions=actions, action_log_probs=action_log_probs,
+                    policy_buffer.insert(states=states, actions=unscaled_actions, action_log_probs=action_log_probs,
                                          values=values, rewards=rewards, masks=mask, bad_masks=bad_mask)
 
                     episode_rewards_virtual.extend([info['episode']['r'] for info in infos if 'episode' in info.keys()])
@@ -229,15 +234,13 @@ def main():
                         'dynamics': dynamics.state_dict(),
                         'normalizers': normalizers.state_dict()},
                        os.path.join(save_dir, 'actor_critic_dynamics_epoch{}.pt'.format(epoch)))
-            logger.info('Saved model to {}'.format(os.path.join(save_dir,
-                                                                'models_epoch{}.pt'.format(epoch))))
+            logger.info('Saved model to {}'.format(os.path.join(save_dir, 'models_epoch{}.pt'.format(epoch))))
 
         if (epoch + 1) % config.eval_freq == 0:
             episode_rewards_real_eval, episode_lengths_real_eval = \
-                evaluate(actor, config.env.env_name, config.seed, 10, None, device, False, False, False)
+                evaluate(actor, config.env.env_name, config.seed, 10, None, device, False, False, None, False)
             log_info = [('perf/ep_rew_real_eval', np.mean(episode_rewards_real_eval)),
-                        ('perf/ep_len_real_eval', np.mean(episode_lengths_real_eval)),
-                        ]
+                        ('perf/ep_len_real_eval', np.mean(episode_lengths_real_eval))]
             log_and_write(logger, writer, log_info, global_step=(epoch + 1) * config.slbo.num_iters)
 
 

@@ -11,8 +11,8 @@ class OffPolicyBuffer(object):
         self.next_states = torch.zeros(buffer_size, num_envs, state_dim)
         self.rewards = torch.zeros(buffer_size, num_envs, 1)
         self.actions = torch.zeros(buffer_size, num_envs, action_dim)
-        self.masks = torch.ones(buffer_size + 1, num_envs, 1)
-        self.bad_masks = torch.ones(buffer_size + 1, num_envs, 1)
+        self.masks = torch.ones(buffer_size, num_envs, 1)
+        self.bad_masks = torch.ones(buffer_size, num_envs, 1)
 
         self.buffer_size = buffer_size
         self.index = 0
@@ -53,10 +53,10 @@ class OffPolicyBuffer(object):
         sampler = BatchSampler(SubsetRandomSampler(range(self.size * self.num_envs)), batch_size, drop_last=True)
 
         for indices in sampler:
-            states = self.states.view(-1, *self.states.size()[2:])[indices]
-            actions = self.actions.view(-1, self.actions.size(-1))[indices]
+            states = self.states.view(-1, *self.states.shape[2:])[indices]
+            actions = self.actions.view(-1, self.actions.shape[-1])[indices]
             rewards = self.rewards.view(-1, 1)[indices]
-            next_states = self.next_states.view(-1, *self.states.size()[2:])[indices]
+            next_states = self.next_states.view(-1, *self.states.shape[2:])[indices]
             masks = self.masks.view(-1, 1)[indices]
             bad_masks = self.bad_masks.view(-1, 1)[indices]
 
@@ -69,15 +69,15 @@ class OffPolicyBuffer(object):
 
         for indices in sampler:
             indices = np.array(indices)
-            states = torch.zeros([batch_size, num_steps, self.states.shape[-1]], device=self.device)
-            next_states = torch.zeros([batch_size, num_steps, self.next_states.shape[-1]], device=self.device)
+            states = torch.zeros(batch_size, num_steps, *self.states.shape[2:], device=self.device)
+            next_states = torch.zeros(batch_size, num_steps, *self.next_states.shape[2:], device=self.device)
             actions = torch.zeros([batch_size, num_steps, self.actions.shape[-1]], device=self.device)
             rewards = torch.zeros([batch_size, num_steps, 1], device=self.device)
             masks = torch.zeros([batch_size, num_steps, 1], device=self.device)
             bad_masks = torch.zeros([batch_size, num_steps, 1], device=self.device)
             for step in range(num_steps):
-                states[:, step, :].copy_(self.states[indices + step].view(-1, self.states.shape[-1]))
-                next_states[:, step, :].copy_(self.next_states[indices + step].view(-1, self.next_states.shape[-1]))
+                states[:, step, :].copy_(self.states[indices + step].view(-1, *self.states.shape[2:]))
+                next_states[:, step, :].copy_(self.next_states[indices + step].view(-1, *self.next_states.shape[2:]))
                 actions[:, step, :].copy_(self.actions[indices + step].view(-1, self.actions.shape[-1]))
                 rewards[:, step, :].copy_(self.rewards[indices + step].view(-1, 1))
                 masks[:, step, :].copy_(self.masks[indices + step].view(-1, 1))

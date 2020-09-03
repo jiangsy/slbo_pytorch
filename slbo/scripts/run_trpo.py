@@ -58,7 +58,7 @@ def main():
     action_dim = action_space.shape[0]
 
     actor = Actor(state_dim, action_space, hidden_dims=config.trpo.actor_hidden_dims,
-                  state_normalizer=None, action_normalizer=None)
+                  state_normalizer=None)
     critic = VCritic(state_dim, hidden_dims=config.trpo.critic_hidden_dims, state_normalizer=None)
     actor.to(device)
     critic.to(device)
@@ -139,8 +139,9 @@ def main():
                 and j % config.eval_interval == 0):
             obs_rms = get_vec_normalize(envs).obs_rms
             eval_episode_rewards, eval_episode_lengths = \
-                evaluate(actor, obs_rms, config.env.env_name, config.seed,
-                         num_episode=10, eval_log_dir=None, device=device, norm_reward=True, norm_obs=True, test=True)
+                evaluate(actor, config.env.env_name, config.seed,
+                         num_episode=10, eval_log_dir=None, device=device, norm_reward=True, norm_obs=True,
+                         obs_rms=obs_rms, test=True)
 
             logger.info('Evaluation:')
             log_and_write(logger, writer, [('eval_ep_rew_mean', np.mean(eval_episode_rewards)),
