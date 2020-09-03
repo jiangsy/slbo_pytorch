@@ -57,7 +57,7 @@ def evaluate(actor, env_name, seed, num_episode, eval_log_dir,
     eval_envs = make_vec_envs(env_name, seed + 1, 1, None, eval_log_dir, device, True, norm_reward, norm_obs, test)
 
     vec_norm = get_vec_normalize(eval_envs)
-    if norm_obs and vec_norm is not None:
+    if vec_norm is not None:
         vec_norm.training = False
         vec_norm.obs_rms = obs_rms
 

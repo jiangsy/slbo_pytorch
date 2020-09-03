@@ -30,4 +30,9 @@ class Config:
         with open(config_path, 'r', encoding='utf-8') as f:
             config_dict = yaml.load(f, Loader=Loader)
         config = DefaultMunch.fromDict(config_dict, object())
-        return config, flatten(config_dict)
+        config_dict = flatten(config_dict)
+        logged_config_dict = {}
+        for key, value in config_dict.items():
+            if key.find('.') >= 0:
+                logged_config_dict[key] = value
+        return config, logged_config_dict

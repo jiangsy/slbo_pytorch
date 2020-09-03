@@ -39,6 +39,7 @@ def main():
     os.makedirs(save_dir, exist_ok=True)
     writer = SummaryWriter(log_dir=log_dir)
     writer.add_hparams(hparam_dict, metric_dict={})
+
     logger.info('Hyperparms:')
     for key, value in hparam_dict.items():
         logger.log('{:30s}: {}'.format(key, value))
@@ -186,6 +187,7 @@ def main():
         # FIXME: rule out incorrect tuples
         normalizers.diff_normalizer.update((cur_model_buffer.next_states - cur_model_buffer.states).
                                            reshape([-1, state_dim]))
+        del cur_model_buffer
 
         for i in range(config.slbo.num_iters):
             logger.log('Updating the model  - iter {:02d}'.format(i + 1))
