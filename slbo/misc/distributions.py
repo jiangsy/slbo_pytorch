@@ -1,6 +1,6 @@
 import torch
 from torch.distributions import Distribution, Normal
-
+import math
 
 class TanhNormal(Distribution):
     """
@@ -50,6 +50,20 @@ class TanhNormal(Distribution):
 
     def mode(self):
         return torch.tan(self.normal_mean), self.normal_mean
+
+
+class FixedLimitedEntNormal(torch.distributions.Normal):
+    def log_probs(self, actions):
+        return super().log_prob(actions).sum(-1, keepdim=True)
+
+    def entropy(self):
+        limit = 2.
+        lo, hi = (-limit - self.loc) / self.scale / math.sqrt(2), (limit - self.loc) / self.scale / math.sqrt(2)
+        return (0.5 * (self.scale.log() + math.log(2 * math.pi) / 2) * (hi.erf() - lo.erf()) + 0.5 *
+                (torch.exp(-hi * hi) * hi - torch.exp(-lo * lo) * lo)).sum(-1)
+
+    def mode(self):
+        return self.mean
 
 
 class FixedCategorical(torch.distributions.Categorical):

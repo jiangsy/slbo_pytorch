@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from slbo.misc.distributions import FixedNormal, FixedCategorical, FixedBernoulli, TanhNormal
+from slbo.misc.distributions import FixedNormal, FixedCategorical, FixedBernoulli, TanhNormal, FixedLimitedEntNormal
 from slbo.models.utils import init
 
 
@@ -40,6 +40,31 @@ class GaussianActorLayer(nn.Module):
             logstd = self.logstd
 
         return FixedNormal(action_mean, logstd.exp()), action_mean, logstd
+
+
+class LimitedEntGaussianActorLayer(nn.Module):
+    def __init__(self, num_inputs, num_outputs, use_state_dependent_std):
+        super(LimitedEntGaussianActorLayer, self).__init__()
+
+        self.actor_mean = nn.Linear(num_inputs, num_outputs)
+        init(self.actor_mean, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
+        self.use_state_dependent_std = use_state_dependent_std
+        if self.use_state_dependent_std:
+            self.actor_logstd = nn.Linear(num_inputs, num_outputs)
+            init(self.actor_logstd, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0))
+
+        else:
+            self.logstd = nn.Parameter(torch.zeros(num_outputs), requires_grad=True)
+
+    def forward(self, x):
+        action_mean = self.actor_mean(x)
+
+        if self.use_state_dependent_std:
+            logstd = self.actor_logstd(x)
+        else:
+            logstd = self.logstd
+
+        return FixedLimitedEntNormal(action_mean, logstd.exp()), action_mean, logstd
 
 
 class BernoulliActorLayer(nn.Module):
