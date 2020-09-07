@@ -21,6 +21,7 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps,
             env = gym.make(env_id)
         else:
             env = make_mujoco_env(env_id)
+            env = TimeLimit(env, max_episode_steps)
 
         env.seed(seed + rank)
         log_dir_ = os.path.join(log_dir, str(rank)) if log_dir is not None else log_dir

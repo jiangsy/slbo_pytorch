@@ -1,13 +1,12 @@
 from operator import itemgetter
-
 import torch
 
 from slbo.models.dynamics import Dynamics
-from slbo.models.normalizer import Normalizer
+from slbo.models.normalizers import Normalizers
 
 
 class SLBO:
-    def __init__(self, dynamics: Dynamics, normalizers: Normalizer, batch_size: int, num_updates: int,
+    def __init__(self, dynamics: Dynamics, normalizers: Normalizers, batch_size: int, num_updates: int,
                  num_rollout_steps, l2_reg_coef, lr, max_grad_norm=2):
         self.dynamics = dynamics
         self.normalizers = normalizers

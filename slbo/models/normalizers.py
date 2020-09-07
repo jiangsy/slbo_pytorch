@@ -57,7 +57,7 @@ class GaussianNormalizer(nn.Module):
         self.n = state_dict['n']
 
 
-class Normalizer(nn.Module):
+class Normalizers(nn.Module):
     def __init__(self, dim_action: int, dim_state: int, verbose=0):
         super().__init__()
         # action_normalizer is not used

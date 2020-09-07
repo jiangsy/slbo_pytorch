@@ -4,12 +4,12 @@ import torch
 import torch.nn as nn
 
 from slbo.models.initializer import truncated_norm_init
-from slbo.models.normalizer import Normalizer
+from slbo.models.normalizers import Normalizers
 from slbo.models.utils import MLP, init
 
 
 class Dynamics(nn.Module):
-    def __init__(self, state_dim: int, action_dim: int, hidden_dims: List[int], normalizer: Normalizer):
+    def __init__(self, state_dim: int, action_dim: int, hidden_dims: List[int], normalizer: Normalizers):
         super(Dynamics, self).__init__()
         self.dim_state = state_dim
         self.dim_action = action_dim

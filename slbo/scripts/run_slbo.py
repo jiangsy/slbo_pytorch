@@ -14,7 +14,7 @@ from slbo.configs.config import Config
 from slbo.envs.wrapped_envs import make_vec_envs, make_vec_vritual_envs
 from slbo.misc.ou_noise import OUNoise
 from slbo.misc.utils import log_and_write, evaluate
-from slbo.models import Actor, ActorCritic, Dynamics, VCritic, Normalizer
+from slbo.models import Actor, ActorCritic, Dynamics, VCritic, Normalizers
 from slbo.storages.off_policy_buffer import OffPolicyBuffer
 from slbo.storages.on_policy_buffer import OnPolicyBuffer
 
@@ -49,7 +49,7 @@ def main():
     device = torch.device('cuda' if config.use_cuda else 'cpu')
 
     # norm_obs is done by the Normalizer and norm_reward does not affect model learning
-    real_envs = make_vec_envs(config.env.env_name, config.seed, config.env.num_envs, config.env.gamma, log_dir, device,
+    real_envs = make_vec_envs(config.env.env_name, config.seed, config.env.num_real_envs, config.env.gamma, log_dir, device,
                               allow_early_resets=True, norm_reward=False, norm_obs=False, test=False,
                               max_episode_steps=config.env.max_episode_steps)
 
@@ -60,7 +60,7 @@ def main():
     action_space = real_envs.action_space
     action_dim = action_space.shape[0]
 
-    normalizers = Normalizer(action_dim, state_dim)
+    normalizers = Normalizers(action_dim, state_dim)
     normalizers.to(device)
 
     dynamics = Dynamics(state_dim, action_dim, config.slbo.dynamics_hidden_dims, normalizer=normalizers)
@@ -94,12 +94,12 @@ def main():
         mf_algo_config = config.trpo
 
     # noinspection PyUnboundLocalVariable
-    virt_envs = make_vec_vritual_envs(config.env.env_name, dynamics, config.seed, config.slbo.num_planning_envs,
+    virt_envs = make_vec_vritual_envs(config.env.env_name, dynamics, config.seed, config.env.num_virtual_envs,
                                       config.env.gamma, device, allow_early_resets=True, norm_reward=mf_algo_config.norm_reward,
                                       max_episode_steps=config.env.max_episode_steps)
     # noinspection PyUnboundLocalVariable
     policy_buffer = \
-        OnPolicyBuffer(mf_algo_config.num_env_steps, config.slbo.num_planning_envs, real_envs.observation_space.shape,
+        OnPolicyBuffer(mf_algo_config.num_env_steps, config.env.num_virtual_envs, real_envs.observation_space.shape,
                        action_space, use_gae=mf_algo_config.use_gae, gae_lambda=mf_algo_config.gae_lambda,
                        gamma=config.env.gamma, use_proper_time_limits=mf_algo_config.use_proper_time_limits)
     policy_buffer.to(device)
@@ -107,7 +107,7 @@ def main():
     model = SLBO(dynamics, normalizers, config.slbo.batch_size, num_rollout_steps=config.slbo.num_rollout_steps,
                  num_updates=config.slbo.num_model_updates, lr=config.slbo.lr, l2_reg_coef=config.slbo.l2_reg_coef)
 
-    model_buffer = OffPolicyBuffer(config.slbo.buffer_size, config.env.num_envs, state_dim, action_dim)
+    model_buffer = OffPolicyBuffer(config.slbo.buffer_size, config.env.num_real_envs, state_dim, action_dim)
     model_buffer.to(device)
 
     if config.model_load_path is not None:
@@ -140,7 +140,7 @@ def main():
             model_buffer.clear()
 
         # reset current_buffer and env
-        cur_model_buffer = OffPolicyBuffer(config.slbo.num_env_steps, config.env.num_envs, state_dim, action_dim)
+        cur_model_buffer = OffPolicyBuffer(config.slbo.num_env_steps, config.env.num_real_envs, state_dim, action_dim)
         cur_model_buffer.to(device)
         states = real_envs.reset()
 
@@ -163,7 +163,7 @@ def main():
             cur_model_buffer.bad_masks[-1, :, :] = 0.
 
         serial_env_steps = (epoch + 1) * config.slbo.num_env_steps
-        total_env_steps = serial_env_steps * config.env.num_envs
+        total_env_steps = serial_env_steps * config.env.num_real_envs
 
         model_buffer.add_buffer(cur_model_buffer)
 
@@ -202,8 +202,8 @@ def main():
                 # collect data in the virtual env
                 if config.slbo.start_strategy == 'buffer':
                     virt_envs.reset()  # set the need_reset flag to False
-                    initial_states = next(model_buffer.get_batch_generator(config.slbo.num_planning_envs))['states']
-                    for env_idx in range(config.slbo.num_planning_envs):
+                    initial_states = next(model_buffer.get_batch_generator(config.env.num_virtual_envs))['states']
+                    for env_idx in range(config.env.num_virtual_envs):
                         virt_envs.env_method('set_state', initial_states[env_idx].cpu().numpy(), indices=env_idx)
                 elif config.slbo.start_strategy == 'reset':
                     initial_states = virt_envs.reset()

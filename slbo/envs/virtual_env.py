@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import torch
+from stable_baselines.common.vec_env.base_vec_env import VecEnv
 
 from slbo.envs import BaseModelBasedEnv
 from slbo.models.dynamics import Dynamics
@@ -49,10 +50,10 @@ class VirtualEnv(gym.Env):
         raise NotImplemented
 
 
-class VecVirtualEnv(gym.Env):
+class VecVirtualEnv(VecEnv):
     def __init__(self, dynamics: Dynamics, env: BaseModelBasedEnv, num_envs, seed, max_episode_steps=1000,
                  auto_reset=True):
-        super().__init__()
+        super(VecEnv, self).__init__()
         self.observation_space = env.observation_space
         self.action_space = env.action_space
 
@@ -117,5 +118,21 @@ class VecVirtualEnv(gym.Env):
         indices = indices or np.arange(self.num_envs)
         self.states[indices] = states.copy()
 
+    def close(self):
+        pass
+
+    def seed(self, seed):
+        return self.env.seed(seed)
+
     def render(self, mode='human'):
         raise NotImplemented
+
+    def set_attr(self, attr_name, value, indices=None):
+        raise NotImplemented
+
+    def get_attr(self, attr_name, indices=None):
+        raise NotImplemented
+
+    def env_method(self, method_name, *method_args, indices=None, **method_kwargs):
+        raise NotImplemented
+
