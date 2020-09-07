@@ -232,6 +232,7 @@ def main():
                             ]
                 for loss_name, loss_value in losses.items():
                     log_info.append(('loss/' + loss_name, loss_value))
+                log_info.append(('time_elapsed', time.time() - start))
                 log_and_write(logger, writer, log_info, global_step=epoch * config.slbo.num_iters + i)
 
         if (epoch + 1) % config.save_freq == 0:

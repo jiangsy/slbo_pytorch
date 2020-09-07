@@ -42,12 +42,13 @@ class SLBO:
                 next_states = self.dynamics(cur_states, action_sequences[:, i])
                 diffs = next_states - cur_states - next_state_sequences[:, i] + state_sequences[:, i]
                 weighted_diffs = diffs / torch.clamp(self.normalizers.diff_normalizer.std, min=1e-6)
-                model_loss += weighted_diffs.pow(2).sum(-1).mean()
+                model_loss += weighted_diffs.pow(2).mean(-1).sqrt()
 
                 if i < self.num_rollout_steps - 1:
                     cur_states = state_sequences[:, i + 1] + \
                                  mask_sequences[:, i] * (next_states - state_sequences[:, i + 1])
 
+            model_loss = model_loss.mean() / self.num_rollout_steps
             params = self.dynamics.parameters()
             l2_loss = self.l2_reg_coef * torch.stack([torch.norm(t, p=2) for t in params]).sum()
 
@@ -55,7 +56,7 @@ class SLBO:
             l2_loss_epoch += l2_loss.item()
 
             self.dynamics_optimizer.zero_grad()
-            (model_loss / self.num_rollout_steps + l2_loss).backward()
+            (model_loss + l2_loss).backward()
             torch.nn.utils.clip_grad_norm_(self.dynamics.parameters(), self.max_grad_norm)
             self.dynamics_optimizer.step()
 

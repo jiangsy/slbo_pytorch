@@ -29,14 +29,14 @@ trpo:
   gae_lambda: 0.95
   use_proper_time_limits: True
   log_interval: 5
-  norm_reward: True
+  norm_reward: False
 
 slbo:
   num_env_steps: 4000
   num_epochs: 100 # collect num_env_steps per epoch
-  num_iters: 10 # number of iteration per epoch
+  num_iters: 20 # number of iteration per epoch
   num_model_updates: 100 # number of model updates per iteration
-  num_policy_updates: 20 # number of model updates per iteration
+  num_policy_updates: 40 # number of model updates per iteration
   use_prev_data: True
   dynamics_hidden_dims: [500, 500]
   num_planning_envs: 1
@@ -46,4 +46,4 @@ slbo:
   lr: 0.001
   l2_reg_coef: 0.00001
   log_interval: 1
-  start_strategy: 'buffer' # choose from 'reset' and 'buffer'
+  start_strategy: 'reset' # choose from 'reset' and 'buffer'
