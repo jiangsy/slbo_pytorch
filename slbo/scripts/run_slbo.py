@@ -50,7 +50,9 @@ def main():
 
     # norm_obs is done by the Normalizer and norm_reward does not affect model learning
     real_envs = make_vec_envs(config.env.env_name, config.seed, config.env.num_envs, config.env.gamma, log_dir, device,
-                              allow_early_resets=True, norm_reward=False, norm_obs=False, test=False)
+                              allow_early_resets=True, norm_reward=False, norm_obs=False, test=False,
+                              max_episode_steps=config.env.max_episode_steps)
+
     lo, hi = torch.tensor(real_envs.action_space.low, device=device), \
              torch.tensor(real_envs.action_space.high, device=device)
 
@@ -93,8 +95,8 @@ def main():
 
     # noinspection PyUnboundLocalVariable
     virt_envs = make_vec_vritual_envs(config.env.env_name, dynamics, config.seed, config.slbo.num_planning_envs,
-                                      config.env.gamma, device, allow_early_resets=True,
-                                      norm_reward=mf_algo_config.norm_reward)
+                                      config.env.gamma, device, allow_early_resets=True, norm_reward=mf_algo_config.norm_reward,
+                                      max_episode_steps=config.env.max_episode_steps)
     # noinspection PyUnboundLocalVariable
     policy_buffer = \
         OnPolicyBuffer(mf_algo_config.num_env_steps, config.slbo.num_planning_envs, real_envs.observation_space.shape,
@@ -131,6 +133,7 @@ def main():
     start = time.time()
 
     for epoch in range(config.slbo.num_epochs):
+
         logger.info('Epoch {}:'.format(epoch + 1))
 
         if not config.slbo.use_prev_data:
@@ -149,7 +152,7 @@ def main():
 
             next_states, rewards, dones, infos = real_envs.step(actions)
             masks = torch.tensor([[0.0] if done else [1.0] for done in dones])
-            bad_masks = torch.tensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos])
+            bad_masks = torch.tensor([[0.0] if 'TimeLimit.truncated' in info.keys() else [1.0] for info in infos])
             cur_model_buffer.insert(states, unscaled_actions, rewards, next_states, masks, bad_masks)
 
             states = next_states
@@ -187,6 +190,7 @@ def main():
         # FIXME: rule out incorrect tuples
         normalizers.diff_normalizer.update((cur_model_buffer.next_states - cur_model_buffer.states).
                                            reshape([-1, state_dim]))
+
         del cur_model_buffer
 
         for i in range(config.slbo.num_iters):
@@ -213,7 +217,7 @@ def main():
                     states, rewards, dones, infos = virt_envs.step(unscaled_actions)
 
                     mask = torch.tensor([[0.0] if done else [1.0] for done in dones], dtype=torch.float32)
-                    bad_mask = torch.tensor([[0.0] if 'bad_transition' in info.keys() else [1.0] for info in infos],
+                    bad_mask = torch.tensor([[0.0] if 'TimeLimit.truncated' in info.keys() else [1.0] for info in infos],
                                             dtype=torch.float32)
                     policy_buffer.insert(states=states, actions=unscaled_actions, action_log_probs=action_log_probs,
                                          values=values, rewards=rewards, masks=mask, bad_masks=bad_mask)
