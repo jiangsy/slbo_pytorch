@@ -64,7 +64,8 @@ class OnPolicyBuffer(object):
                 self.values[-1] = next_value
                 gae = 0
                 for step in reversed(range(self.num_steps)):
-                    delta = self.rewards[step] + self.gamma * self.values[step + 1] * self.masks[step + 1] - self.values[step]
+                    delta = self.rewards[step] + self.gamma * self.values[step + 1] * self.masks[step + 1] - \
+                            self.values[step]
                     gae = delta + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
                     gae = gae * self.bad_masks[step + 1]
                     self.returns[step] = gae + self.values[step]

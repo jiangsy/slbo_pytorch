@@ -1,7 +1,7 @@
 import gym
 import numpy as np
-import torch
 from stable_baselines.common.vec_env.base_vec_env import VecEnv
+import torch
 
 from slbo.envs import BaseModelBasedEnv
 from slbo.models.dynamics import Dynamics
@@ -86,7 +86,7 @@ class VecVirtualEnv(VecEnv):
         with torch.no_grad():
             next_states = self.dynamics(torch.tensor(self.states, device=self.device, dtype=torch.float32),
                                         torch.tensor(self.actions, device=self.device, dtype=torch.float32)).cpu().numpy()
-            rewards, dones = self.env.mb_step(self.states, rescaled_actions, next_states)
+        rewards, dones = self.env.mb_step(self.states, rescaled_actions, next_states)
         self.episode_rewards += rewards
         self.states = next_states.copy()
         timeouts = self.elapsed_steps == self.max_episode_steps
@@ -104,7 +104,9 @@ class VecVirtualEnv(VecEnv):
             self.reset(np.argwhere(dones).squeeze(axis=-1))
         return self.states.copy(), rewards.copy(), dones.copy(), info_dicts
 
+    # if indices = None, every env will be reset
     def reset(self, indices=None) -> np.ndarray:
+        # have to distinguish [] and None
         indices = np.arange(self.num_envs) if indices is None else indices
         if np.size(indices) == 0:
             return np.array([])
@@ -114,9 +116,14 @@ class VecVirtualEnv(VecEnv):
         self.episode_rewards[indices] = 0.
         return states.copy()
 
+    # if indices = None, every env will be set
     def set_state(self, states: np.ndarray, indices=None):
         indices = indices or np.arange(self.num_envs)
+        assert states.ndim == 2 and states.shape[0] == indices.shape[0]
         self.states[indices] = states.copy()
+        # set_state should reset reward and length
+        self.elapsed_steps[indices] = 0
+        self.episode_rewards[indices] = 0.
 
     def close(self):
         pass

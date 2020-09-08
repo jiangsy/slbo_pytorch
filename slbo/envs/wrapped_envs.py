@@ -65,7 +65,7 @@ def make_vec_envs(env_name: str,
     return envs
 
 
-def make_vec_vritual_envs(env_name: str,
+def make_vec_virtual_envs(env_name: str,
                           dynamics: Dynamics,
                           seed: int,
                           num_envs: int,

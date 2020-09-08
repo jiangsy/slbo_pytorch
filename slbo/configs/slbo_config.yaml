@@ -24,13 +24,14 @@ trpo:
   entropy_coef: 0.005
   max_kld: 0.01
   num_env_steps: 500 # 500 x 8 = 4000
-  critic_hidden_dims: [32, 32]
+  critic_hidden_dims: [64, 64]
   actor_hidden_dims: [32, 32]
   use_limited_ent_actor: True
   use_gae: True
   gae_lambda: 0.95
   use_proper_time_limits: True
   log_interval: 5
+  l2_reg_coef : 0.
   norm_reward: False
 
 slbo:

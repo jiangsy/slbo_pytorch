@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from slbo.algos import SLBO, PPO, TRPO
 from slbo.configs.config import Config
-from slbo.envs.wrapped_envs import make_vec_envs, make_vec_vritual_envs
+from slbo.envs.wrapped_envs import make_vec_envs, make_vec_virtual_envs
 from slbo.misc.ou_noise import OUNoise
 from slbo.misc.utils import log_and_write, evaluate
 from slbo.models import Actor, ActorCritic, Dynamics, VCritic, Normalizers
@@ -89,14 +89,16 @@ def main():
                          state_normalizer=normalizers.state_normalizer)
         actor.to(device)
         critic.to(device)
-        agent = TRPO(actor, critic, entropy_coef=config.trpo.entropy_coef, verbose=config.verbose)
+        agent = TRPO(actor, critic, entropy_coef=config.trpo.entropy_coef, l2_reg_coef=config.trpo.l2_reg_coef,
+                     verbose=config.verbose)
         noise_wrapped_actor = noise.wrap(actor)
         mf_algo_config = config.trpo
 
     # noinspection PyUnboundLocalVariable
-    virt_envs = make_vec_vritual_envs(config.env.env_name, dynamics, config.seed, config.env.num_virtual_envs,
-                                      config.env.gamma, device, allow_early_resets=True, norm_reward=mf_algo_config.norm_reward,
-                                      max_episode_steps=config.env.max_episode_steps)
+    virt_envs = make_vec_virtual_envs(config.env.env_name, dynamics, config.seed, config.env.num_virtual_envs,
+                                      config.env.gamma, device, allow_early_resets=True,
+                                      max_episode_steps=config.env.max_episode_steps,
+                                      norm_reward=mf_algo_config.norm_reward)
     # noinspection PyUnboundLocalVariable
     policy_buffer = \
         OnPolicyBuffer(mf_algo_config.num_env_steps, config.env.num_virtual_envs, real_envs.observation_space.shape,
@@ -201,10 +203,9 @@ def main():
             for _ in tqdm.tqdm(range(config.slbo.num_policy_updates)):
                 # collect data in the virtual env
                 if config.slbo.start_strategy == 'buffer':
-                    virt_envs.reset()  # set the need_reset flag to False
+                    virt_envs.reset()
                     initial_states = next(model_buffer.get_batch_generator(config.env.num_virtual_envs))['states']
-                    for env_idx in range(config.env.num_virtual_envs):
-                        virt_envs.env_method('set_state', initial_states[env_idx].cpu().numpy(), indices=env_idx)
+                    virt_envs.set_state(initial_states.cpu().numpy())
                 elif config.slbo.start_strategy == 'reset':
                     initial_states = virt_envs.reset()
                 policy_buffer.states[0].copy_(initial_states)
@@ -227,7 +228,7 @@ def main():
 
                 with torch.no_grad():
                     next_value = critic(policy_buffer.states[-1])
-                policy_buffer.compute_returns(next_value)
+                    policy_buffer.compute_returns(next_value)
                 losses.update(agent.update(policy_buffer))
 
             if (i + 1) % config.trpo.log_interval == 0 and len(episode_rewards_virtual) > 0:
