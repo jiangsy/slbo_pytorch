@@ -53,11 +53,13 @@ def collect_traj(actor, envs, buffer, total_step):
 
 
 def evaluate(actor, env_name, seed, num_episode, eval_log_dir,
-             device, norm_reward=False, norm_obs=True, obs_rms=None, test=True):
-    eval_envs = make_vec_envs(env_name, seed + 1, 1, None, eval_log_dir, device, True, norm_reward, norm_obs, test)
+             device, max_episode_steps=1000, norm_reward=False, norm_obs=True, obs_rms=None, test=True):
+    eval_envs = make_vec_envs(env_name, seed + 1, 1, None, eval_log_dir, device, True,
+                              max_episode_steps, norm_reward, norm_obs, test)
 
     vec_norm = get_vec_normalize(eval_envs)
-    if vec_norm is not None:
+    if vec_norm is not None and norm_obs:
+        assert obs_rms is not None
         vec_norm.training = False
         vec_norm.obs_rms = obs_rms
 

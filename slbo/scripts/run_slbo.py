@@ -250,7 +250,8 @@ def main():
 
         if (epoch + 1) % config.eval_freq == 0:
             episode_rewards_real_eval, episode_lengths_real_eval = \
-                evaluate(actor, config.env.env_name, config.seed, 10, None, device, False, False, None, False)
+                evaluate(actor, config.env.env_name, config.seed, 10, None, device, config.env.max_episode_steps,
+                         norm_reward=False, norm_obs=False, obs_rms=None, test=False)
             log_info = [('perf/ep_rew_real_eval', np.mean(episode_rewards_real_eval)),
                         ('perf/ep_len_real_eval', np.mean(episode_lengths_real_eval))]
             log_and_write(logger, writer, log_info, global_step=(epoch + 1) * config.slbo.num_iters)

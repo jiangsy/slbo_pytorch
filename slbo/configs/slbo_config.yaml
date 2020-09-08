@@ -1,7 +1,7 @@
 mf_algo: 'trpo'
-proj_dir: '/home/polixir/jiangsy/slbo'
+proj_dir: '/home/liuxh/Documents/slbo'
 result_dir: './result'
-use_cuda: False
+use_cuda: True
 seed: 0
 verbose: 0
 model_load_path: ~
