@@ -127,10 +127,10 @@ def main():
         raise NotImplemented
         model_buffer.load(config.buffer_load_path)
 
-    episode_rewards_real = deque(maxlen=10)
-    episode_lengths_real = deque(maxlen=10)
-    episode_rewards_virtual = deque(maxlen=10)
-    episode_lengths_virtual = deque(maxlen=10)
+    episode_rewards_real = deque(maxlen=30)
+    episode_lengths_real = deque(maxlen=30)
+    episode_rewards_virtual = deque(maxlen=30)
+    episode_lengths_virtual = deque(maxlen=30)
 
     start = time.time()
 
@@ -209,6 +209,7 @@ def main():
                 elif config.slbo.start_strategy == 'reset':
                     initial_states = virt_envs.reset()
                 policy_buffer.states[0].copy_(initial_states)
+                cur_iter_episode_rewards = []
                 for step in range(config.trpo.num_env_steps):
                     with torch.no_grad():
                         unscaled_actions, action_log_probs, dist_entropy, *_ = actor.act(policy_buffer.states[step])
@@ -225,6 +226,13 @@ def main():
 
                     episode_rewards_virtual.extend([info['episode']['r'] for info in infos if 'episode' in info.keys()])
                     episode_lengths_virtual.extend([info['episode']['l'] for info in infos if 'episode' in info.keys()])
+                    cur_iter_episode_rewards.extend([info['episode']['r'] for info in infos if 'episode' in info.keys()])
+
+                if np.min(no.array(cur_iter_episode_rewards)) < -300:
+                    logger.warn('Potential problems')
+                    torch.save({'states': policy_buffer.states, 'actions': policy_buffer.actions,
+                                'values': policy_buffer.values, 'rewards': policy_buffer.rewards,
+                                'masks': policy_buffer.masks}, os.path.join(save_dir, 'wrongdata_{}.pt').format(epoch))
 
                 with torch.no_grad():
                     next_value = critic(policy_buffer.states[-1])

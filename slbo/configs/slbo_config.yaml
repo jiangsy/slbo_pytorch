@@ -1,8 +1,9 @@
+proj_name: 'slbo'
 mf_algo: 'trpo'
 proj_dir: '/home/liuxh/Documents/slbo'
 result_dir: './result'
 use_cuda: True
-seed: 0
+seed: 1
 verbose: 0
 model_load_path: ~
 buffer_load_path: ~
