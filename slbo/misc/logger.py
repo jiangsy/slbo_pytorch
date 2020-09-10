@@ -9,7 +9,8 @@ import warnings
 from collections import defaultdict
 from typing import Optional
 from colorama import Fore, Style
-
+import getpass
+import re
 
 import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
@@ -24,6 +25,10 @@ WARN = 30
 ERROR = 40
 
 DISABLED = 50
+
+PROJ_NAME = None
+EMAIL_ACCOUNT = 'jiangsy@lamda.nju.edu.cn'
+EMAIL_PASSWORD = None
 
 
 class KVWriter(object):
@@ -107,9 +112,12 @@ class HumanOutputFormat(KVWriter, SeqWriter):
 
     def writeseq(self, seq):
         seq = list(seq)
-        for (i, elem) in enumerate(seq):
+        for elem in seq:
+            # do not log color in file
+            if self.own_file and is_color(elem):
+                continue
             self.file.write(elem)
-            if i < len(seq) - 1 and i != 0:  # add space unless this is the last one
+            if not is_color(elem):
                 self.file.write(' ')
         self.file.write('\n')
         self.file.flush()
@@ -370,6 +378,7 @@ def warn(*args):
 
     :param args: (list) log the arguments
     """
+    send_mail('\n'.join(map(str, args)))
     log(Fore.CYAN, *args, Fore.WHITE, level=WARN)
 
 
@@ -571,7 +580,7 @@ class Logger(object):
 Logger.DEFAULT = Logger.CURRENT = Logger(folder=None, output_formats=[HumanOutputFormat(sys.stdout)])
 
 
-def configure(folder=None, format_strs=None):
+def configure(folder=None, format_strs=None, proj_name=None):
     """
     configure the current logger
 
@@ -579,6 +588,9 @@ def configure(folder=None, format_strs=None):
     :param format_strs: (list) the output logging format
         (if None, $OPENAI_LOG_FORMAT, if still None, ['stdout', 'log', 'csv'])
     """
+    global PROJ_NAME
+    PROJ_NAME = proj_name
+
     if folder is None:
         folder = os.getenv('OPENAI_LOGDIR')
     if folder is None:
@@ -598,8 +610,15 @@ def configure(folder=None, format_strs=None):
     output_formats = [make_output_format(f, folder, log_suffix) for f in format_strs]
 
     Logger.CURRENT = Logger(folder=folder, output_formats=output_formats)
-    log('Logging to %s' % folder)
+    info('Logging to %s' % folder)
 
+    global EMAIL_ACCOUNT
+    global EMAIL_PASSWORD
+
+    EMAIL_ACCOUNT = input('Email account:') or EMAIL_ACCOUNT
+    EMAIL_PASSWORD = getpass.getpass('Email password:') or EMAIL_PASSWORD
+    if not EMAIL_ACCOUNT or not EMAIL_PASSWORD:
+        log('Mailing is disabled.')
 
 def reset():
     """
@@ -741,6 +760,37 @@ def read_tb(path):
         for (step, value) in pairs:
             data[step - 1, colidx] = value
     return pandas.DataFrame(data, columns=tags)
+
+
+def is_color(arg):
+    if not isinstance(arg, str):
+        return False
+    return re.match(r'\x1b\[\d+m', arg) is not None
+
+
+def send_mail(message):
+    if not EMAIL_ACCOUNT or not EMAIL_PASSWORD:
+        return
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.header import Header
+    mail_user = EMAIL_ACCOUNT
+    mail_pass = EMAIL_PASSWORD
+
+    sender = EMAIL_ACCOUNT
+    receivers = [EMAIL_ACCOUNT]
+
+    message = MIMEText(message, 'plain', 'utf-8')
+
+    subject = 'Proj:{} Warning@{}'.format(PROJ_NAME, time.asctime(time.localtime(time.time())))
+    message['Subject'] = Header(subject, 'utf-8')
+
+    try:
+        smtpObj = smtplib.SMTP_SSL('smtp.exmail.qq.com:465')
+        smtpObj.login(mail_user, mail_pass)
+        smtpObj.sendmail(sender, receivers, message.as_string())
+    except smtplib.SMTPException:
+        pass
 
 
 if __name__ == "__main__":

@@ -11,10 +11,6 @@ from slbo.envs.mujoco.rllab.hopper_env import RLLabHopperEnv
 from slbo.envs.mujoco.rllab.humanoid_env import RLLabSimpleHumanoidEnv
 from slbo.envs.mujoco.rllab.swimmer_env import RLLabSwimmerEnv
 from slbo.envs.mujoco.rllab.walker2d_env import RLLabWalker2dEnv
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
 
 
 def make_mujoco_env(env_name: str):

@@ -4,10 +4,7 @@ import torch
 
 from slbo.models import Actor, VCritic
 from slbo.models.utils import get_flat_params, set_flat_params, get_flat_grad
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
+from slbo.misc import logger
 
 
 # noinspection DuplicatedCode

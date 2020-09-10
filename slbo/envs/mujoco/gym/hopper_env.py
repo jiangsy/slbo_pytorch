@@ -1,8 +1,8 @@
 from gym.envs.mujoco import hopper
 import numpy as np
-from stable_baselines import logger
 
 from slbo.envs import BaseModelBasedEnv
+from slbo.misc import logger
 
 
 # noinspection DuplicatedCode

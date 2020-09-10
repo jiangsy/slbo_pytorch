@@ -1,8 +1,8 @@
 import numpy as np
 from gym.envs.mujoco import swimmer
-from stable_baselines import logger
 
 from slbo.envs import BaseModelBasedEnv
+from slbo.misc import logger
 
 
 # noinspection DuplicatedCode

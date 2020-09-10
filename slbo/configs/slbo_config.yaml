@@ -1,4 +1,4 @@
-proj_name: 'slbo'
+proj_name: 'SLBO'
 mf_algo: 'trpo'
 proj_dir: '/home/liuxh/Documents/slbo'
 result_dir: './result'
@@ -15,7 +15,7 @@ env:
   num_real_envs: 1
   num_virtual_envs: 8
   gamma: 0.99
-  max_episode_steps: 500
+  max_episode_steps: 1000
 
 ou_noise:
   theta: 0.15
@@ -36,7 +36,7 @@ trpo:
   norm_reward: False
 
 slbo:
-  num_env_steps: 4000
+  num_env_steps: 10000
   num_epochs: 100 # collect num_env_steps per epoch
   num_iters: 20 # number of iteration per epoch
   num_model_updates: 100 # number of model updates per iteration

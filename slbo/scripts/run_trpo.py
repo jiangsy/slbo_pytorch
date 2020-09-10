@@ -15,10 +15,7 @@ from slbo.envs.wrapped_envs import make_vec_envs, get_vec_normalize
 from slbo.models import Actor, VCritic
 from slbo.misc.utils import evaluate, log_and_write
 from slbo.storages.on_policy_buffer import OnPolicyBuffer
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
+from slbo.misc import logger
 
 
 # noinspection DuplicatedCode

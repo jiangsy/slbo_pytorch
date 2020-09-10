@@ -2,10 +2,9 @@ import abc
 import gym
 import numpy as np
 import torch
-from stable_baselines import logger
 
 from slbo.storages.off_policy_buffer import OffPolicyBuffer
-
+from slbo.misc import logger
 
 class BaseBatchedEnv(gym.Env, abc.ABC):
     n_envs: int

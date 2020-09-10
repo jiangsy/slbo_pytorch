@@ -2,10 +2,8 @@ import torch
 import torch.distributions.kl as kl
 import torch.nn as nn
 from typing import List
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
+
+from slbo.misc import logger
 
 
 class GaussianNormalizer(nn.Module):

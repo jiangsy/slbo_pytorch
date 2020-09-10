@@ -5,10 +5,7 @@ from munch import DefaultMunch
 from yaml import Loader
 import collections
 
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
+from slbo.misc import logger
 
 
 def flatten(d, parent_key='', sep='.'):

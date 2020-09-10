@@ -17,11 +17,7 @@ from slbo.misc.utils import log_and_write, evaluate
 from slbo.models import Actor, ActorCritic, Dynamics, VCritic, Normalizers
 from slbo.storages.off_policy_buffer import OffPolicyBuffer
 from slbo.storages.on_policy_buffer import OnPolicyBuffer
-
-try:
-    from slbo.misc import logger
-except ImportError:
-    from stable_baselines import logger
+from slbo.misc import logger
 
 
 # noinspection DuplicatedCode
@@ -40,6 +36,7 @@ def main():
     writer = SummaryWriter(log_dir=log_dir)
     writer.add_hparams(hparam_dict, metric_dict={})
 
+    logger.configure(log_dir, None, config.proj_name)
     logger.info('Hyperparms:')
     for key, value in hparam_dict.items():
         logger.log('{:30s}: {}'.format(key, value))
@@ -228,11 +225,13 @@ def main():
                     episode_lengths_virtual.extend([info['episode']['l'] for info in infos if 'episode' in info.keys()])
                     cur_iter_episode_rewards.extend([info['episode']['r'] for info in infos if 'episode' in info.keys()])
 
-                if np.min(no.array(cur_iter_episode_rewards)) < -300:
-                    logger.warn('Potential problems')
+                if cur_iter_episode_rewards and np.min(np.array(cur_iter_episode_rewards)) < -100:
+                    logger.warn('Incorrect virtual buffer. Policy update is skipped.',
+                                np.array(cur_iter_episode_rewards))
                     torch.save({'states': policy_buffer.states, 'actions': policy_buffer.actions,
                                 'values': policy_buffer.values, 'rewards': policy_buffer.rewards,
                                 'masks': policy_buffer.masks}, os.path.join(save_dir, 'wrongdata_{}.pt').format(epoch))
+                    continue
 
                 with torch.no_grad():
                     next_value = critic(policy_buffer.states[-1])
