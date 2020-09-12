@@ -1,10 +1,10 @@
 import gym
 import numpy as np
-from stable_baselines.common.vec_env.base_vec_env import VecEnv
 import torch
 
 from slbo.envs import BaseModelBasedEnv
 from slbo.models.dynamics import Dynamics
+from slbo.thirdparty.base_vec_env import VecEnv
 
 
 class VirtualEnv(gym.Env):

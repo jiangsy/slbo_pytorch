@@ -8,7 +8,7 @@ from slbo.misc import logger
 
 # noinspection DuplicatedCode
 class TRPO:
-    def __init__(self, actor: Actor, critic: VCritic, max_kld=1e-2, l2_reg_coef=1e-3, damping=0.1,
+    def __init__(self, actor: Actor, critic: VCritic, critic_lr=3e-4, max_kld=1e-2, l2_reg_coef=1e-3, damping=0.1,
                  entropy_coef=0., line_search_accepted_ratio=0.1, verbose=0):
 
         self.actor = actor
@@ -20,7 +20,7 @@ class TRPO:
         self.linesearch_accepted_ratio = line_search_accepted_ratio
         self.entropy_coef = entropy_coef
 
-        self.critic_lr = 1e-3
+        self.critic_lr = critic_lr
         self.num_critic_updates = 5
         self.critic_optim = torch.optim.Adam(self.critic.parameters(), self.critic_lr)
         self.verbose = verbose

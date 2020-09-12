@@ -36,7 +36,7 @@ def main():
     writer = SummaryWriter(log_dir=log_dir)
     writer.add_hparams(hparam_dict, metric_dict={})
 
-    logger.configure(log_dir, None, config.proj_name)
+    logger.configure(log_dir, None, config.log_email, config.proj_name)
     logger.info('Hyperparms:')
     for key, value in hparam_dict.items():
         logger.log('{:30s}: {}'.format(key, value))

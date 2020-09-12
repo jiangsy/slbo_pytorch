@@ -9,6 +9,7 @@ model_load_path: ~
 buffer_load_path: ~
 save_freq: 2
 eval_freq: 1
+log_email: False
 
 env:
   env_name: 'Hopper-v2'
@@ -22,7 +23,7 @@ ou_noise:
   sigma: 0.3
 
 trpo:
-  entropy_coef: 0.005
+  entropy_coef: 0.001
   max_kld: 0.01
   num_env_steps: 500 # 500 x 8 = 4000
   critic_hidden_dims: [64, 64]
@@ -34,6 +35,7 @@ trpo:
   log_interval: 5
   l2_reg_coef : 0.
   norm_reward: False
+  critic_lr: 3e-4
 
 slbo:
   num_env_steps: 10000

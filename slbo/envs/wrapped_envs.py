@@ -4,15 +4,15 @@ from typing import Optional
 import gym
 from gym.wrappers import TimeLimit
 import torch
-from stable_baselines import bench
-from stable_baselines.common.vec_env import VecEnvWrapper
-from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from stable_baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
-from stable_baselines.common.vec_env.vec_normalize import VecNormalize
 
 from slbo.envs.mujoco.mujoco_envs import make_mujoco_env
 from slbo.envs.virtual_env import VirtualEnv, VecVirtualEnv
 from slbo.models.dynamics import Dynamics
+from slbo.thirdparty.base_vec_env import VecEnvWrapper
+from slbo.thirdparty.dummy_vec_env import DummyVecEnv
+from slbo.thirdparty.subproc_vec_env import SubprocVecEnv
+from slbo.thirdparty.vec_normalize import VecNormalize
+from slbo.thirdparty.monitor import Monitor
 
 
 def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps, test=True):
@@ -25,7 +25,7 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps,
 
         env.seed(seed + rank)
         log_dir_ = os.path.join(log_dir, str(rank)) if log_dir is not None else log_dir
-        env = bench.Monitor(env, log_dir_, allow_early_resets=allow_early_resets)
+        env = Monitor(env, log_dir_, allow_early_resets=allow_early_resets)
 
         return env
 

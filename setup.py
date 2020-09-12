@@ -11,7 +11,10 @@ setup(
         'torch>=1.4.0',
         'gym>=0.17.0',
         'numpy',
-        'stable_baselines',
         'pyglib',
         'scipy',
+        'munch',
+        'pyyaml',
+        'colorama',
+        'tensorboard>=1.15.0'
     ])

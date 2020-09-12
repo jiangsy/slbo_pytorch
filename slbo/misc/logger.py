@@ -17,7 +17,6 @@ from tensorflow.python import pywrap_tensorflow
 from tensorflow.core.util import event_pb2
 from tensorflow.python.util import compat
 
-from stable_baselines.common.misc_util import mpi_rank_or_zero
 
 DEBUG = 10
 INFO = 20
@@ -580,13 +579,15 @@ class Logger(object):
 Logger.DEFAULT = Logger.CURRENT = Logger(folder=None, output_formats=[HumanOutputFormat(sys.stdout)])
 
 
-def configure(folder=None, format_strs=None, proj_name=None):
+def configure(folder=None, format_strs=None, log_email=False, proj_name=None):
     """
     configure the current logger
 
     :param folder: (str) the save location (if None, $OPENAI_LOGDIR, if still None, tempdir/openai-[date & time])
     :param format_strs: (list) the output logging format
         (if None, $OPENAI_LOG_FORMAT, if still None, ['stdout', 'log', 'csv'])
+    :param log_email: (bool) whether to send logs via e-mail
+    :param proj_name: (str) proj_name for e-mail title
     """
     global PROJ_NAME
     PROJ_NAME = proj_name
@@ -597,7 +598,7 @@ def configure(folder=None, format_strs=None, proj_name=None):
         folder = os.path.join(tempfile.gettempdir(), datetime.datetime.now().strftime("openai-%Y-%m-%d-%H-%M-%S-%f"))
     assert isinstance(folder, str)
     os.makedirs(folder, exist_ok=True)
-    rank = mpi_rank_or_zero()
+    rank = 0
 
     log_suffix = ''
     if format_strs is None:
@@ -612,13 +613,15 @@ def configure(folder=None, format_strs=None, proj_name=None):
     Logger.CURRENT = Logger(folder=folder, output_formats=output_formats)
     info('Logging to %s' % folder)
 
-    global EMAIL_ACCOUNT
-    global EMAIL_PASSWORD
+    if log_email:
+        global EMAIL_ACCOUNT
+        global EMAIL_PASSWORD
 
-    EMAIL_ACCOUNT = input('Email account:') or EMAIL_ACCOUNT
-    EMAIL_PASSWORD = getpass.getpass('Email password:') or EMAIL_PASSWORD
-    if not EMAIL_ACCOUNT or not EMAIL_PASSWORD:
-        log('Mailing is disabled.')
+        EMAIL_ACCOUNT = input('Email account:') or EMAIL_ACCOUNT
+        EMAIL_PASSWORD = getpass.getpass('Email password:') or EMAIL_PASSWORD
+        if not EMAIL_ACCOUNT or not EMAIL_PASSWORD:
+            log('Mailing is disabled.')
+
 
 def reset():
     """

@@ -61,3 +61,11 @@ class HopperEnv(hopper.HopperEnv, BaseModelBasedEnv):
         return reward, done
 
 
+if __name__ == '__main__':
+    env = HopperEnv()
+    obs = env.reset()
+    done = False
+    while not done:
+        a = env.action_space.sample()
+        obs, rew, done, _ = env.step(a)
+
