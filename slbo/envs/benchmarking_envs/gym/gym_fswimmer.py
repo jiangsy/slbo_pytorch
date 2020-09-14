@@ -15,7 +15,7 @@ class fixedSwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         mujoco_env.MujocoEnv.__init__(self, '%s/assets/fixed_swimmer.xml' % dir_path, 4)
         utils.EzPickle.__init__(self)
 
-    def _step(self, a):
+    def step(self, a):
         ctrl_cost_coeff = 0.0001
 
         """

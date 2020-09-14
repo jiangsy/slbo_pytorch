@@ -8,8 +8,8 @@ from gym.wrappers import TimeLimit
 import torch
 
 from slbo.envs.mujoco.mujoco_envs import make_mujoco_env
-from slbo.envs.virtual_env import VirtualEnv, VecVirtualEnv
-from slbo.envs.benchmarking_envs.bm_envs import make_benchmarking_env
+from slbo.envs.virtual_env import VecVirtualEnv
+from slbo.envs.benchmarking_envs.benchmarking_envs import make_benchmarking_env
 from slbo.thirdparty.base_vec_env import VecEnvWrapper
 from slbo.thirdparty.dummy_vec_env import DummyVecEnv
 from slbo.thirdparty.subproc_vec_env import SubprocVecEnv
@@ -47,10 +47,10 @@ def make_vec_envs(env_name: str,
                   max_episode_steps: int = 1000,
                   norm_reward=True,
                   norm_obs=True,
-                  test=False,
+                  benchmarking=False,
                   ):
     envs = [
-        make_env(env_name, seed, i, log_dir, allow_early_resets, max_episode_steps, test)
+        make_env(env_name, seed, i, log_dir, allow_early_resets, max_episode_steps, benchmarking)
         for i in range(num_envs)
     ]
 
@@ -80,8 +80,12 @@ def make_vec_virtual_envs(env_name: str,
                           max_episode_steps: int = 1000,
                           norm_reward=False,
                           norm_obs=False,
+                          benchmarking=True,
                           ):
-    envs = VecVirtualEnv(dynamics, make_mujoco_env(env_name), num_envs, seed, max_episode_steps)
+    if benchmarking:
+        envs = VecVirtualEnv(dynamics, make_benchmarking_env(env_name), num_envs, seed, max_episode_steps)
+    else:
+        envs = VecVirtualEnv(dynamics, make_mujoco_env(env_name), num_envs, seed, max_episode_steps)
 
     if len(envs.observation_space.shape) == 1 and (norm_reward or norm_obs):
         if gamma is None:

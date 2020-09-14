@@ -1,7 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
 import os
 
 import numpy as np
@@ -20,7 +16,7 @@ class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         )
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action: np.ndarray):
         old_ob = self._get_obs()
         self.do_simulation(action, self.frame_skip)
         ob = self._get_obs()

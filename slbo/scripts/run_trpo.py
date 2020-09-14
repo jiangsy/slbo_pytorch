@@ -49,7 +49,7 @@ def main():
     device = torch.device('cuda' if config.use_cuda else 'cpu')
 
     envs = make_vec_envs(config.env.env_name, config.seed, config.env.num_envs, config.env.gamma, log_dir, device,
-                         allow_early_resets=False, norm_reward=True, norm_obs=True, test=True)
+                         allow_early_resets=False, norm_reward=True, norm_obs=True, benchmarking=True)
 
     state_dim = envs.observation_space.shape[0]
     action_space = envs.action_space

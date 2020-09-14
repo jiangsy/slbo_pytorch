@@ -16,7 +16,7 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         )
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action: np.ndarray):
         start_ob = self._get_obs()
         reward_run = start_ob[8]
 

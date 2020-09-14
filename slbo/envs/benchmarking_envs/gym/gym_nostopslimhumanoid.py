@@ -16,7 +16,7 @@ class HumanoidEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         return np.concatenate([data.qpos.flat[2:],
                                data.qvel.flat])
 
-    def _step(self, a):
+    def step(self, a):
         data = self.sim.data
         action = a
         if getattr(self, 'action_space', None):

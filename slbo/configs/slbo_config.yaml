@@ -12,7 +12,7 @@ eval_freq: 1
 log_email: False
 
 env:
-  env_name: 'Hopper-v2'
+  env_name: 'FixedHopper'
   num_real_envs: 1
   num_virtual_envs: 8
   gamma: 0.99

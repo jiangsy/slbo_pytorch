@@ -20,13 +20,12 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         )
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action: np.ndarray):
         old_ob = self._get_obs()
         self.do_simulation(action, self.frame_skip)
 
         if getattr(self, 'action_space', None):
-            action = np.clip(action, self.action_space.low,
-                             self.action_space.high)
+            action = np.clip(action, self.action_space.low, self.action_space.high)
         ob = self._get_obs()
 
         reward_ctrl = -0.1 * np.square(action).sum()

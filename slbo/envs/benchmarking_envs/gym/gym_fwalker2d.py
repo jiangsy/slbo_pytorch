@@ -20,7 +20,7 @@ class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         )
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action):
         old_ob = self._get_obs()
         self.do_simulation(action, self.frame_skip)
         ob = self._get_obs()

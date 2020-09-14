@@ -20,7 +20,7 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         )
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action):
         action = np.array(action)
         action += np.random.uniform(low=-0.03, high=0.03, size=action.shape)
         start_ob = self._get_obs()

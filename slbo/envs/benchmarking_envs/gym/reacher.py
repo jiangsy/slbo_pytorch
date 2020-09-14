@@ -11,7 +11,7 @@ class ReacherEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         utils.EzPickle.__init__(self)
         mujoco_env.MujocoEnv.__init__(self, 'reacher.xml', 2)
 
-    def _step(self, a):
+    def step(self, a):
         vec = self.get_body_com("fingertip") - self.get_body_com("target")
 
         if getattr(self, 'action_space', None):

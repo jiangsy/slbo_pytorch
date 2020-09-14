@@ -49,7 +49,7 @@ class CartPoleEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, action):
+    def step(self, action):
         action = 1 if action[0] > .0 else 0
         state = self.state
         obs = self.state
@@ -81,7 +81,7 @@ class CartPoleEnv(gym.Env):
         self.steps_beyond_done = None
         return np.array(self.state)
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
                 self.viewer.close()

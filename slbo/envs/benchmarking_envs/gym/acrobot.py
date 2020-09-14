@@ -96,7 +96,7 @@ class AcrobotEnv(core.Env):
         self.state = self.np_random.uniform(low=-0.1, high=0.1, size=(4,))
         return self._get_ob()
 
-    def _step(self, a):
+    def step(self, a):
         # Discretize
         if a[0] < -.33:
             action = 0
@@ -179,7 +179,7 @@ class AcrobotEnv(core.Env):
         ddtheta1 = -(d2 * ddtheta2 + phi1) / d1
         return (dtheta1, dtheta2, ddtheta1, ddtheta2, 0.)
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
                 self.viewer.close()

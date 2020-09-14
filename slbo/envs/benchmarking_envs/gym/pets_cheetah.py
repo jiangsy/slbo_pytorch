@@ -13,7 +13,7 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         mujoco_env.MujocoEnv.__init__(self, '%s/assets/half_cheetah.xml' % dir_path, 5)
         utils.EzPickle.__init__(self)
 
-    def _step(self, action):
+    def step(self, action):
         self.prev_qpos = np.copy(self.sim.data.qpos.flat)
         self.do_simulation(action, self.frame_skip)
         ob = self._get_obs()

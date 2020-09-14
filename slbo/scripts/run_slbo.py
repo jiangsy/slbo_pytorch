@@ -47,7 +47,7 @@ def main():
 
     # norm_obs is done by the Normalizer and norm_reward does not affect model learning
     real_envs = make_vec_envs(config.env.env_name, config.seed, config.env.num_real_envs, config.env.gamma, log_dir, device,
-                              allow_early_resets=True, norm_reward=False, norm_obs=False, test=False,
+                              allow_early_resets=True, norm_reward=False, norm_obs=False, benchmarking=True,
                               max_episode_steps=config.env.max_episode_steps)
 
     lo, hi = torch.tensor(real_envs.action_space.low, device=device), \
@@ -93,7 +93,7 @@ def main():
 
     # noinspection PyUnboundLocalVariable
     virt_envs = make_vec_virtual_envs(config.env.env_name, dynamics, config.seed, config.env.num_virtual_envs,
-                                      config.env.gamma, device, allow_early_resets=True,
+                                      config.env.gamma, device, allow_early_resets=True, benchmarking=True,
                                       max_episode_steps=config.env.max_episode_steps,
                                       norm_reward=mf_algo_config.norm_reward)
     # noinspection PyUnboundLocalVariable
