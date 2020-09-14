@@ -1,13 +1,11 @@
-import logging
 import math
 import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
 
+from slbo.misc import logger
 
-logger = logging.getLogger(__name__)
-from stable_baselines import logger
 
 class CartPoleEnv(gym.Env):
     metadata = {
@@ -53,7 +51,6 @@ class CartPoleEnv(gym.Env):
 
     def _step(self, action):
         action = 1 if action[0] > .0 else 0
-        # assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         state = self.state
         obs = self.state
         reward = np.cos(obs[2]) - 0.01 * (obs[0] ** 2)
@@ -70,25 +67,7 @@ class CartPoleEnv(gym.Env):
         theta = theta + self.tau * theta_dot
         theta_dot = theta_dot + self.tau * thetaacc
         self.state = (x, x_dot, theta, theta_dot)
-        '''
-        done = x < -self.x_threshold \
-            or x > self.x_threshold \
-            or theta < -self.theta_threshold_radians \
-            or theta > self.theta_threshold_radians
-        done = bool(done)
 
-        if not done:
-            reward = 1.0
-        elif self.steps_beyond_done is None:
-            # Pole just fell!
-            self.steps_beyond_done = 0
-            reward = 1.0
-        else:
-            if self.steps_beyond_done == 0:
-                logger.warning("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
-            self.steps_beyond_done += 1
-            reward = 0.0
-        '''
         done = False
         self.steps_beyond_done = None
 

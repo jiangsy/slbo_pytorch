@@ -1,7 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
 import os
 
 import numpy as np
@@ -68,9 +64,3 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def cost_tf_vec(self, obs, acts, next_obs):
         raise NotImplementedError
-        """
-        reward_ctrl = -0.1 * tf.reduce_sum(tf.square(acts), axis=1)
-        reward_run = next_obs[:, 0]
-        reward = reward_run + reward_ctrl
-        return -reward
-        """

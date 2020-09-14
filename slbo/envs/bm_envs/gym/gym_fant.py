@@ -1,7 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
 import os
 
 import numpy as np
@@ -70,9 +66,6 @@ class AntEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
         reward = reward_run + reward_ctrl + reward_height + alive_reward
         return -reward
-
-    def cost_tf_vec(self, obs, acts, next_obs):
-        raise NotImplementedError
 
     def mb_step(self, states, actions, next_states):
         if getattr(self, 'action_space', None):

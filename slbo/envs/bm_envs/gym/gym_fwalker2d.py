@@ -73,16 +73,6 @@ class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         reward = reward_run + reward_ctrl + reward_height + alive_reward
         return -reward
 
-    def cost_tf_vec(self, obs, acts, next_obs):
-        """
-        reward_ctrl = -0.1 * tf.reduce_sum(tf.square(acts), axis=1)
-        reward_run = next_obs[:, 0]
-        # reward_height = -3.0 * tf.square(next_obs[:, 1] - 1.3)
-        reward = reward_run + reward_ctrl
-        return -reward
-        """
-        raise NotImplementedError
-
     def verify(self):
         pass
 

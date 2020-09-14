@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import gym
 from gym.wrappers import TimeLimit
@@ -7,12 +9,13 @@ import torch
 
 from slbo.envs.mujoco.mujoco_envs import make_mujoco_env
 from slbo.envs.virtual_env import VirtualEnv, VecVirtualEnv
-from slbo.models.dynamics import Dynamics
 from slbo.thirdparty.base_vec_env import VecEnvWrapper
 from slbo.thirdparty.dummy_vec_env import DummyVecEnv
 from slbo.thirdparty.subproc_vec_env import SubprocVecEnv
 from slbo.thirdparty.vec_normalize import VecNormalize
 from slbo.thirdparty.monitor import Monitor
+if TYPE_CHECKING:
+    from slbo.models.dynamics import Dynamics
 
 
 def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps, test=True):

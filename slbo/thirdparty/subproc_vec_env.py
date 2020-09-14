@@ -4,7 +4,7 @@ from typing import Sequence
 import gym
 import numpy as np
 
-from dr_im.thirdparty.base_vec_env import VecEnv, CloudpickleWrapper
+from slbo.thirdparty.base_vec_env import VecEnv, CloudpickleWrapper
 
 
 def _worker(remote, parent_remote, env_fn_wrapper):

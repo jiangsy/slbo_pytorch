@@ -1,7 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
 import os
 
 import numpy as np
@@ -10,6 +6,7 @@ from gym.envs.mujoco import mujoco_env
 from slbo.envs import BaseModelBasedEnv
 
 
+# noinspection DuplicatedCode
 class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def __init__(self, frame_skip=4):
@@ -68,16 +65,6 @@ class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         alive_reward = 1.0 - np.array(done, dtype=np.float)
         reward = reward_run + reward_ctrl + reward_height + alive_reward
         return -reward
-
-    def cost_tf_vec(self, obs, acts, next_obs):
-        """
-        reward_ctrl = -0.1 * tf.reduce_sum(tf.square(acts), axis=1)
-        reward_run = next_obs[:, 0]
-        # reward_height = -3.0 * tf.square(next_obs[:, 1] - 1.3)
-        reward = reward_run + reward_ctrl
-        return -reward
-        """
-        raise NotImplementedError
 
     def mb_step(self, states, actions, next_states):
         # returns rewards and dones

@@ -1,9 +1,6 @@
-
 import numpy as np
 from gym import utils
 from gym.envs.mujoco import mujoco_env
-from slbo.utils.dataset import Dataset, gen_dtype
-from lunzi.Logger import logger
 
 
 class InvertedPendulumEnv(mujoco_env.MujocoEnv, utils.EzPickle):
@@ -52,23 +49,3 @@ class InvertedPendulumEnv(mujoco_env.MujocoEnv, utils.EzPickle):
 
     def cost_np_vec(self, obs, acts, next_obs):
         return ((obs[:, 1]) ** 2)
-
-    def verify(self, n=2000, eps=1e-4):
-        dataset = Dataset(gen_dtype(self, 'state action next_state reward done'), n)
-        state = self.reset()
-        for _ in range(n):
-            action = self.action_space.sample()
-            next_state, reward, done, _ = self.step(action)
-            dataset.append((state, action, next_state, reward, done))
-
-            state = next_state
-            if done:
-                state = self.reset()
-
-        rewards_, dones_ = self.mb_step(dataset.state, dataset.action, dataset.next_state)
-        diff = dataset.reward - rewards_
-        l_inf = np.abs(diff).max()
-        logger.info('rewarder difference: %.6f', l_inf)
-
-        assert np.allclose(dones_, dataset.done)
-        assert l_inf < eps

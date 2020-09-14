@@ -5,8 +5,8 @@ from typing import Sequence, Optional, List, Union
 import cloudpickle
 import numpy as np
 
-from dr_im.misc import logger
-from dr_im.thirdparty.tile_images import tile_images
+from slbo.misc import logger
+from slbo.thirdparty.tile_images import tile_images
 
 
 class AlreadySteppingError(Exception):

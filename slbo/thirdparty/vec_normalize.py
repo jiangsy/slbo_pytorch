@@ -2,8 +2,8 @@ import numpy as np
 import pickle
 import warnings
 
-from dr_im.thirdparty.base_vec_env import VecEnvWrapper
-from dr_im.thirdparty.running_mean_std import RunningMeanStd
+from slbo.thirdparty.base_vec_env import VecEnvWrapper
+from slbo.thirdparty.running_mean_std import RunningMeanStd
 
 class VecNormalize(VecEnvWrapper):
     """

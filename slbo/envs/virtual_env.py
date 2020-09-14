@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import gym
 import numpy as np
 import torch
+from typing import TYPE_CHECKING
 
-from slbo.envs import BaseModelBasedEnv
-from slbo.models.dynamics import Dynamics
 from slbo.thirdparty.base_vec_env import VecEnv
+if TYPE_CHECKING:
+    from slbo.models.dynamics import Dynamics
+    from slbo.envs import BaseModelBasedEnv
 
 
 class VirtualEnv(gym.Env):
