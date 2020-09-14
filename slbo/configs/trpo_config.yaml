@@ -1,5 +1,5 @@
 mf_algo: 'trpo'
-proj_dir: '/home/polixir/jiangsy/slbo'
+proj_dir: '/home/liuxh/Documents/slbo'
 result_dir: './result'
 use_cuda: False
 seed: 0
@@ -11,7 +11,7 @@ log_interval: 1
 eval_interval: 10
 
 env:
-  env_name: 'Hopper-v2'
+  env_name: 'HalfCheetah-v2'
   num_envs: 1
   gamma: 0.99
 
