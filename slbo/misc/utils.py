@@ -82,3 +82,15 @@ def evaluate(actor, env_name, seed, num_episode, eval_log_dir,
     eval_envs.close()
 
     return eval_episode_rewards, eval_episode_lengths
+
+
+def mpi_rank_or_zero():
+    """
+    Return the MPI rank if mpi is installed. Otherwise, return 0.
+    :return: (int)
+    """
+    try:
+        import mpi4py
+        return mpi4py.MPI.COMM_WORLD.Get_rank()
+    except ImportError:
+        return 0

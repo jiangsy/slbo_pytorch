@@ -8,15 +8,11 @@ import tempfile
 import warnings
 from collections import defaultdict
 from typing import Optional
-from colorama import Fore, Style
+from colorama import Fore
 import getpass
 import re
 
-import tensorflow as tf
-from tensorflow.python import pywrap_tensorflow
-from tensorflow.core.util import event_pb2
-from tensorflow.python.util import compat
-
+from slbo.misc.utils import mpi_rank_or_zero
 
 DEBUG = 10
 INFO = 20
@@ -201,15 +197,6 @@ class CSVOutputFormat(KVWriter):
         self.file.close()
 
 
-def summary_val(key, value):
-    """
-    :param key: (str)
-    :param value: (float)
-    """
-    kwargs = {'tag': key, 'simple_value': float(value)}
-    return tf.Summary.Value(**kwargs)
-
-
 def valid_float_value(value):
     """
     Returns True if the value can be successfully cast into a float
@@ -222,39 +209,6 @@ def valid_float_value(value):
         return True
     except TypeError:
         return False
-
-
-class TensorBoardOutputFormat(KVWriter):
-    def __init__(self, folder):
-        """
-        Dumps key/value pairs into TensorBoard's numeric format.
-
-        :param folder: (str) the folder to write the log to
-        """
-        os.makedirs(folder, exist_ok=True)
-        self.dir = folder
-        self.step = 1
-        prefix = 'events'
-        path = os.path.join(os.path.abspath(folder), prefix)
-        self.writer = pywrap_tensorflow.EventsWriter(compat.as_bytes(path))  # type: pywrap_tensorflow.EventsWriter
-
-    def writekvs(self, kvs):
-        summary = tf.Summary(value=[summary_val(k, v) for k, v in kvs.items() if valid_float_value(v)])
-        event = event_pb2.Event(wall_time=time.time(), summary=summary)
-        event.step = self.step  # is there any reason why you'd want to specify the step?
-        if self.writer is None:
-            raise ValueError("Attempt to write after close().")
-        self.writer.WriteEvent(event)
-        self.writer.Flush()
-        self.step += 1
-
-    def close(self):
-        """
-        closes the file
-        """
-        if self.writer:
-            self.writer.Close()
-            self.writer = None
 
 
 def make_output_format(_format, ev_dir, log_suffix=''):
@@ -275,8 +229,6 @@ def make_output_format(_format, ev_dir, log_suffix=''):
         return JSONOutputFormat(os.path.join(ev_dir, 'progress%s.json' % log_suffix))
     elif _format == 'csv':
         return CSVOutputFormat(os.path.join(ev_dir, 'progress%s.csv' % log_suffix))
-    elif _format == 'tensorboard':
-        return TensorBoardOutputFormat(os.path.join(ev_dir, 'tb%s' % log_suffix))
     else:
         raise ValueError('Unknown format specified: %s' % (_format,))
 
@@ -598,7 +550,7 @@ def configure(folder=None, format_strs=None, log_email=False, proj_name=None):
         folder = os.path.join(tempfile.gettempdir(), datetime.datetime.now().strftime("openai-%Y-%m-%d-%H-%M-%S-%f"))
     assert isinstance(folder, str)
     os.makedirs(folder, exist_ok=True)
-    rank = 0
+    rank = mpi_rank_or_zero()
 
     log_suffix = ''
     if format_strs is None:
@@ -726,43 +678,6 @@ def read_csv(fname):
     """
     import pandas
     return pandas.read_csv(fname, index_col=None, comment='#')
-
-
-def read_tb(path):
-    """
-    read a tensorboard output
-
-    :param path: (str) a tensorboard file OR a directory, where we will find all TB files of the form events.
-    :return: (pandas DataFrame) the tensorboad data
-    """
-    import pandas
-    import numpy as np
-    from glob import glob
-    # from collections import defaultdict
-    import tensorflow as tf
-    if os.path.isdir(path):
-        fnames = glob(os.path.join(path, "events.*"))
-    elif os.path.basename(path).startswith("events."):
-        fnames = [path]
-    else:
-        raise NotImplementedError("Expected tensorboard file or directory containing them. Got %s" % path)
-    tag2pairs = defaultdict(list)
-    maxstep = 0
-    for fname in fnames:
-        for summary in tf.train.summary_iterator(fname):
-            if summary.step > 0:
-                for value in summary.summary.value:
-                    pair = (summary.step, value.simple_value)
-                    tag2pairs[value.tag].append(pair)
-                maxstep = max(summary.step, maxstep)
-    data = np.empty((maxstep, len(tag2pairs)))
-    data[:] = np.nan
-    tags = sorted(tag2pairs.keys())
-    for (colidx, tag) in enumerate(tags):
-        pairs = tag2pairs[tag]
-        for (step, value) in pairs:
-            data[step - 1, colidx] = value
-    return pandas.DataFrame(data, columns=tags)
 
 
 def is_color(arg):
