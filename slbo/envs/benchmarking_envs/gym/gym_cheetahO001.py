@@ -38,8 +38,8 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat[1:],
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat[1:],
+            self.sim.data.qvel.flat,
         ])
 
     def reset_model(self):

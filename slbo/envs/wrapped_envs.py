@@ -9,6 +9,7 @@ import torch
 
 from slbo.envs.mujoco.mujoco_envs import make_mujoco_env
 from slbo.envs.virtual_env import VirtualEnv, VecVirtualEnv
+from slbo.envs.benchmarking_envs.bm_envs import make_benchmarking_env
 from slbo.thirdparty.base_vec_env import VecEnvWrapper
 from slbo.thirdparty.dummy_vec_env import DummyVecEnv
 from slbo.thirdparty.subproc_vec_env import SubprocVecEnv
@@ -18,10 +19,11 @@ if TYPE_CHECKING:
     from slbo.models.dynamics import Dynamics
 
 
-def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps, test=True):
+def make_env(env_id, seed, rank, log_dir, allow_early_resets, max_episode_steps, benchmarking=True):
     def _thunk():
-        if test:
-            env = gym.make(env_id)
+        if benchmarking:
+            env = make_benchmarking_env(env_id)
+            env = TimeLimit(env, max_episode_steps)
         else:
             env = make_mujoco_env(env_id)
             env = TimeLimit(env, max_episode_steps)

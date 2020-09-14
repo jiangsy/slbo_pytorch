@@ -1,9 +1,7 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
 import numpy as np
 from gym.envs.mujoco import mujoco_env
 from gym import utils
+
 from slbo.envs import BaseModelBasedEnv
 
 
@@ -14,16 +12,12 @@ class HumanoidEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         utils.EzPickle.__init__(self)
 
     def _get_obs(self):
-        data = self.model.data
+        data = self.sim.data
         return np.concatenate([data.qpos.flat[2:],
-                               data.qvel.flat,
-                               data.cinert.flat,
-                               data.cvel.flat,
-                               data.qfrc_actuator.flat,
-                               data.cfrc_ext.flat])
+                               data.qvel.flat])
 
     def _step(self, a):
-        data = self.model.data
+        data = self.sim.data
         action = a
         if getattr(self, 'action_space', None):
             action = np.clip(a, self.action_space.low,
@@ -33,12 +27,11 @@ class HumanoidEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         alive_bonus = 5.0
         lin_vel_cost = 0.25 / 0.015 * data.qvel.flat[0]
         quad_ctrl_cost = 0.1 * np.square(action).sum()
-        quad_impact_cost = .5e-6 * np.square(data.cfrc_ext).sum()
-        quad_impact_cost = min(quad_impact_cost, 10)
+        quad_impact_cost = 0.0
 
         self.do_simulation(action, self.frame_skip)
         reward = lin_vel_cost - quad_ctrl_cost - quad_impact_cost + alive_bonus
-        qpos = self.model.data.qpos
+        qpos = self.sim.data.qpos
         done = bool((qpos[2] < 1.0) or (qpos[2] > 2.0))
         return self._get_obs(), reward, done, dict(reward_linvel=lin_vel_cost, reward_quadctrl=-quad_ctrl_cost, reward_alive=alive_bonus, reward_impact=-quad_impact_cost)
 
@@ -60,8 +53,7 @@ class HumanoidEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         reward_ctrl = -0.1 * np.sum(np.square(acts), axis=1)
         reward_run = 0.25 / 0.015 * obs[:, 22]
 
-        quad_impact_cost = .5e-6 * np.square(obs[:, -84:]).sum()
-        quad_impact_cost = min(quad_impact_cost, 10)
+        quad_impact_cost = 0.0
 
         height = next_obs[:, 0]
         done = np.logical_or((height > 2.0), (height < 1.0))
@@ -80,7 +72,6 @@ class HumanoidEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
             actions = np.clip(actions, self.action_space.low,
                               self.action_space.high)
         rewards = - self.cost_np_vec(states, actions, next_states)
-
         height = next_states[:, 0]
         done = np.logical_or((height > 2.0), (height < 1.0))
         return rewards, done

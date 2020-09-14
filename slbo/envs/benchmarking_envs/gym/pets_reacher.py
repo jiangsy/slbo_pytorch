@@ -38,7 +38,7 @@ class Reacher3DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         raw_obs = np.concatenate([
-            self.model.data.qpos.flat, self.model.data.qvel.flat[:-3],
+            self.sim.data.qpos.flat, self.sim.data.qvel.flat[:-3],
         ])
 
         EE_pos = np.reshape(self.get_EE_pos(raw_obs[None]), [-1])

@@ -31,7 +31,7 @@ class InvertedPendulumEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         return reward
 
     def _get_obs(self):
-        return np.concatenate([self.model.data.qpos, self.model.data.qvel]).ravel()
+        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
 
     def viewer_setup(self):
         v = self.viewer

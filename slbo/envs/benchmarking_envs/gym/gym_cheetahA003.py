@@ -6,8 +6,8 @@ import os
 
 import numpy as np
 from gym import utils
-from gym.envs.mujoco import mujoco_env
 from slbo.envs import BaseModelBasedEnv
+from gym.envs.mujoco import mujoco_env
 
 
 class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
@@ -22,7 +22,7 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def _step(self, action):
         action = np.array(action)
-        action += np.random.uniform(low=-0.1, high=0.1, size=action.shape)
+        action += np.random.uniform(low=-0.03, high=0.03, size=action.shape)
         start_ob = self._get_obs()
         reward_run = start_ob[8]
 
@@ -39,8 +39,8 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat[1:],
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat[1:],
+            self.sim.data.qvel.flat,
         ])
 
     def reset_model(self):

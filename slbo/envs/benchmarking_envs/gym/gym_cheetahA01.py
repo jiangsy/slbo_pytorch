@@ -21,6 +21,8 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
         utils.EzPickle.__init__(self)
 
     def _step(self, action):
+        action = np.array(action)
+        action += np.random.uniform(low=-0.1, high=0.1, size=action.shape)
         start_ob = self._get_obs()
         reward_run = start_ob[8]
 
@@ -33,13 +35,12 @@ class HalfCheetahEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
         reward = reward_run + reward_ctrl
         done = False
-        ob += np.random.uniform(low=-0.1, high=0.1, size=ob.shape)
         return ob, reward, done, {}
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat[1:],
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat[1:],
+            self.sim.data.qvel.flat,
         ])
 
     def reset_model(self):

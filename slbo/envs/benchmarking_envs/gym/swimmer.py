@@ -35,10 +35,10 @@ class SwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            # (self.model.data.qpos.flat[:1] - self.prev_qpos[:1]) / self.dt,
+            # (self.sim.data.qpos.flat[:1] - self.prev_qpos[:1]) / self.dt,
             # self.get_body_comvel("torso")[:1],
-            self.model.data.qpos.flat[2:],
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat[2:],
+            self.sim.data.qvel.flat,
         ])
 
     def mb_step(self, states, actions, next_states):
@@ -55,7 +55,7 @@ class SwimmerEnv(mujoco_env.MujocoEnv, utils.EzPickle, BaseModelBasedEnv):
             self.init_qpos + self.np_random.uniform(low=-.1, high=.1, size=self.model.nq),
             self.init_qvel + self.np_random.uniform(low=-.1, high=.1, size=self.model.nv)
         )
-        self.prev_qpos = np.copy(self.model.data.qpos.flat)
+        self.prev_qpos = np.copy(self.sim.data.qpos.flat)
         return self._get_obs()
 
     def cost_np_vec(self, obs, acts, next_obs):

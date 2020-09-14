@@ -21,8 +21,8 @@ class HalfCheetahEnv(half_cheetah.HalfCheetahEnv, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat,  # 9
-            self.model.data.qvel.flat,  # 9
+            self.sim.data.qpos.flat,  # 9
+            self.sim.data.qvel.flat,  # 9
             self.get_body_com("torso").flat,  # 3
             self.get_body_comvel("torso").flat,  # 3
         ])

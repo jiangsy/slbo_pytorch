@@ -22,8 +22,8 @@ class SwimmerEnv(swimmer.SwimmerEnv, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat,  # 5
-            self.model.data.qvel.flat,  # 5
+            self.sim.data.qpos.flat,  # 5
+            self.sim.data.qvel.flat,  # 5
             self.get_body_com("torso").flat,  # 3
             self.get_body_comvel("torso").flat,  # 3
         ]).reshape(-1)

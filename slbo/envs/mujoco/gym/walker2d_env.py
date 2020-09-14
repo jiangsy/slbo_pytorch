@@ -22,8 +22,8 @@ class Walker2DEnv(walker2d.Walker2dEnv, BaseModelBasedEnv):
 
     def _get_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat,
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat,
             self.get_body_com("torso").flat,
             self.get_body_comvel("torso").flat
         ])
